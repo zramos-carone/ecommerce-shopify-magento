@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========== USUARIOS ==========
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String?
+  password  String
+  role      String     @default("customer") // customer, admin
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  orders     Order[]
+  cart       Cart?
+  addresses  Address[]
+
+  @@index([email])
+}
+
+// ========== PRODUCTOS ==========
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  description String?
+  price       Float
+  image       String?
+  stock       Int      @default(0)
+  category    String?
+  brand       String?
+  
+  // Mayorista info
+  mayoristId  String?  // Ingram, Distribuido, Synnex
+  mayoristSku String?
+  mayoristPrice Float?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@index([category])
+  @@index([brand])
+  @@index([mayoristId])
+}
+
+// ========== CARRITO ==========
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId])
+}
+
+// ========== ÓRDENES ==========
+model Order {
+  id          String   @id @default(cuid())
+  orderNumber String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  items       OrderItem[]
+  
+  // Dirección de envío
+  shippingAddress String
+  shippingCity    String
+  shippingState   String
+  shippingZip     String
+  
+  // Totales
+  subtotal    Float
+  tax         Float
+  shipping    Float
+  total       Float
+  
+  // Estado
+  status      String   @default("pending") // pending, processing, shipped, delivered, cancelled
+  
+  // Pagos
+  paymentId   String?
+  paymentStatus String @default("pending") // pending, completed, failed
+  paymentMethod String? // stripe, paypal
+  
+  // Tracking
+  trackingNumber String?
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float // Precio al momento de la orden
+  subtotal  Float
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ========== DIRECCIONES ==========
+model Address {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  fullName  String
+  street    String
+  city      String
+  state     String
+  zip       String
+  country   String @default("MX")
+  
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ========== PAGOS (Stripe/PayPal) ==========
+model Payment {
+  id            String  @id @default(cuid())
+  orderId       String  @unique
+  
+  stripeIntentId String?
+  paypalOrderId  String?
+  
+  amount        Float
+  status        String  @default("pending") // pending, completed, failed, refunded
+  method        String  // stripe, paypal
+  
+  metadata      String? // JSON stringified
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([orderId])
+}
+
+// ========== SINCRONIZACIÓN MAYORISTAS ==========
+model MayoristaSync {
+  id            String   @id @default(cuid())
+  mayorista     String   // ingram, distribuido, synnex
+  syncedAt      DateTime @default(now())
+  productCount  Int
+  status        String   @default("pending") // pending, completed, failed
+  error         String?
+  
+  @@index([mayorista])
+  @@index([syncedAt])
+}
