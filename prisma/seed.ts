@@ -1,46 +1,54 @@
 import { prisma } from '@/lib/db'
-import {
-  getIngramProducts,
-  getDistribuidoProducts,
-  getSynnexProducts,
-} from '@/lib/services/mayoristas'
+import { generateBulkProducts } from '@/lib/services/mayoristas/bulk-generator'
 
 async function main() {
-  console.log('🌱 Starting database seed...')
+  console.log('🌱 Starting database seed (1,500 products)...')
 
   // Limpiar productos existentes
   await prisma.product.deleteMany()
   console.log('✅ Cleared existing products')
 
-  // Obtener productos de todos los mayoristas
-  const ingramProducts = getIngramProducts()
-  const distribuidoProducts = getDistribuidoProducts()
-  const synnexProducts = getSynnexProducts()
+  // Generar 1,500 productos (500 por mayorista)
+  const { ingram, distribuido, synnex } = generateBulkProducts()
+  const allProducts = [...ingram, ...distribuido, ...synnex]
 
-  const allProducts = [...ingramProducts, ...distribuidoProducts, ...synnexProducts]
+  console.log(`📦 Generated ${allProducts.length} products, inserting into database...`)
 
-  // Insertar en base de datos
-  for (const product of allProducts) {
-    await prisma.product.create({
-      data: {
-        sku: product.sku,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        stock: product.stock,
-        category: product.category,
-        brand: product.brand,
-        mayoristId: product.mayorista,
-        mayoristSku: product.mayoristSku,
-        mayoristPrice: product.mayoristPrice,
-      },
-    })
+  // Insertar en batches para mejor performance
+  const BATCH_SIZE = 100
+  let inserted = 0
+
+  for (let i = 0; i < allProducts.length; i += BATCH_SIZE) {
+    const batch = allProducts.slice(i, i + BATCH_SIZE)
+
+    await Promise.all(
+      batch.map((product) =>
+        prisma.product.create({
+          data: {
+            sku: product.sku,
+            name: product.name,
+            description: product.description,
+            price: product.price,
+            stock: product.stock,
+            category: product.category,
+            brand: product.brand,
+            mayoristId: product.mayorista,
+            mayoristSku: product.mayoristSku,
+            mayoristPrice: product.mayoristPrice,
+          },
+        })
+      )
+    )
+
+    inserted += batch.length
+    const progress = Math.round((inserted / allProducts.length) * 100)
+    console.log(`  ⏳ Progress: ${inserted}/${allProducts.length} (${progress}%)`)
   }
 
   console.log(`✅ Seeded ${allProducts.length} products`)
-  console.log(`  - Ingram: ${ingramProducts.length}`)
-  console.log(`  - Distribuido: ${distribuidoProducts.length}`)
-  console.log(`  - Synnex: ${synnexProducts.length}`)
+  console.log(`  - Ingram: ${ingram.length}`)
+  console.log(`  - Distribuido: ${distribuido.length}`)
+  console.log(`  - Synnex: ${synnex.length}`)
 }
 
 main()
