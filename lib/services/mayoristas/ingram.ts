@@ -1,4 +1,4 @@
-import { MayoristaProduct, SearchQuery, SearchResult } from '@/lib/types/mayorista'
+import { MayoristaProduct, SearchQuery } from '@/lib/types/mayorista'
 
 // Mock data basado en productos tech reales
 const INGRAM_PRODUCTS: MayoristaProduct[] = [
@@ -9,8 +9,10 @@ const INGRAM_PRODUCTS: MayoristaProduct[] = [
     description: 'Ultrabook premium con pantalla OLED',
     price: 999.99,
     stock: 45,
+    inStock: true,
     category: 'Laptop',
     brand: 'Dell',
+    rating: 4.7,
     mayorista: 'ingram',
     mayoristSku: 'ING-DELL-XPS13',
     mayoristPrice: 899.99,
@@ -22,8 +24,10 @@ const INGRAM_PRODUCTS: MayoristaProduct[] = [
     description: 'Laptop enterprise de alto rendimiento',
     price: 1299.99,
     stock: 32,
+    inStock: true,
     category: 'Laptop',
     brand: 'Lenovo',
+    rating: 4.6,
     mayorista: 'ingram',
     mayoristSku: 'ING-LEN-X1C12',
     mayoristPrice: 1199.99,
@@ -35,8 +39,10 @@ const INGRAM_PRODUCTS: MayoristaProduct[] = [
     description: 'Laptop profesional con chip M3 Max',
     price: 1999.99,
     stock: 28,
+    inStock: true,
     category: 'Laptop',
     brand: 'Apple',
+    rating: 4.9,
     mayorista: 'ingram',
     mayoristSku: 'ING-APPL-MBP14',
     mayoristPrice: 1899.99,
@@ -48,8 +54,10 @@ const INGRAM_PRODUCTS: MayoristaProduct[] = [
     description: 'GPU top tier para gaming y AI',
     price: 1599.99,
     stock: 15,
+    inStock: true,
     category: 'GPU',
     brand: 'NVIDIA',
+    rating: 4.8,
     mayorista: 'ingram',
     mayoristSku: 'ING-NVD-4090',
     mayoristPrice: 1499.99,
@@ -61,37 +69,69 @@ const INGRAM_PRODUCTS: MayoristaProduct[] = [
     description: 'SSD NVMe PCIe 4.0 ultra rápido',
     price: 299.99,
     stock: 89,
+    inStock: true,
     category: 'Storage',
     brand: 'Samsung',
+    rating: 4.5,
     mayorista: 'ingram',
     mayoristSku: 'ING-SAM-990P4TB',
     mayoristPrice: 249.99,
   },
 ]
 
-export async function searchIngram(query: SearchQuery): Promise<SearchResult> {
-  // Simula búsqueda (sin credenciales reales aún)
-  const searchTerm = query.q.toLowerCase()
+function applyFilters(
+  products: MayoristaProduct[],
+  query: SearchQuery
+): MayoristaProduct[] {
+  return products.filter((product) => {
+    // Text search
+    if (query.q) {
+      const q = query.q.toLowerCase()
+      const matchesText =
+        product.name.toLowerCase().includes(q) ||
+        product.description?.toLowerCase().includes(q) ||
+        product.brand?.toLowerCase().includes(q)
+      if (!matchesText) return false
+    }
 
-  const filtered = INGRAM_PRODUCTS.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm) ||
-      product.sku.toLowerCase().includes(searchTerm) ||
-      product.brand?.toLowerCase().includes(searchTerm)
+    // Category filter
+    if (
+      query.category &&
+      !product.category?.toLowerCase().includes(query.category.toLowerCase())
+    ) {
+      return false
+    }
 
-    const matchesCategory = !query.category || product.category === query.category
-    const matchesPrice =
-      (!query.priceMin || product.price >= query.priceMin) &&
-      (!query.priceMax || product.price <= query.priceMax)
+    // Brand filter
+    if (query.brand && product.brand?.toLowerCase() !== query.brand.toLowerCase()) {
+      return false
+    }
 
-    return matchesSearch && matchesCategory && matchesPrice
+    // Price range
+    if (query.minPrice !== undefined && product.price < query.minPrice) {
+      return false
+    }
+    if (query.maxPrice !== undefined && product.price > query.maxPrice) {
+      return false
+    }
+
+    // Stock filter
+    const minStockRequired = query.minStock ?? 1
+    if (product.stock < minStockRequired) {
+      return false
+    }
+
+    // Rating filter
+    if (query.minRating && (!product.rating || product.rating < query.minRating)) {
+      return false
+    }
+
+    return true
   })
+}
 
-  return {
-    products: filtered,
-    total: filtered.length,
-    mayorista: 'ingram',
-  }
+export async function searchIngram(query: SearchQuery): Promise<MayoristaProduct[]> {
+  return applyFilters(INGRAM_PRODUCTS, query)
 }
 
 export async function syncIngram(): Promise<number> {

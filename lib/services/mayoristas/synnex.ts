@@ -1,4 +1,4 @@
-import { MayoristaProduct, SearchQuery, SearchResult } from '@/lib/types/mayorista'
+import { MayoristaProduct, SearchQuery } from '@/lib/types/mayorista'
 
 const SYNNEX_PRODUCTS: MayoristaProduct[] = [
   {
@@ -8,8 +8,10 @@ const SYNNEX_PRODUCTS: MayoristaProduct[] = [
     description: 'Gaming laptop ultrafino con RTX 4080',
     price: 2999.99,
     stock: 12,
+    inStock: true,
     category: 'Laptop',
     brand: 'Razer',
+    rating: 4.8,
     mayorista: 'synnex',
     mayoristSku: 'SYN-RAZR-BLADE15',
     mayoristPrice: 2899.99,
@@ -21,8 +23,10 @@ const SYNNEX_PRODUCTS: MayoristaProduct[] = [
     description: 'Ratón profesional multi-dispositivo',
     price: 99.99,
     stock: 234,
+    inStock: true,
     category: 'Peripherals',
     brand: 'Logitech',
+    rating: 4.6,
     mayorista: 'synnex',
     mayoristSku: 'SYN-LOG-MXM3S',
     mayoristPrice: 79.99,
@@ -34,8 +38,10 @@ const SYNNEX_PRODUCTS: MayoristaProduct[] = [
     description: 'Monitor/TV OLED 4K para profesionales',
     price: 1299.99,
     stock: 18,
+    inStock: true,
     category: 'Display',
     brand: 'Samsung',
+    rating: 4.7,
     mayorista: 'synnex',
     mayoristSku: 'SYN-SAM-OLED55',
     mayoristPrice: 1199.99,
@@ -47,8 +53,10 @@ const SYNNEX_PRODUCTS: MayoristaProduct[] = [
     description: 'Soundbar WiFi con Dolby Atmos',
     price: 799.99,
     stock: 45,
+    inStock: true,
     category: 'Audio',
     brand: 'Sonos',
+    rating: 4.5,
     mayorista: 'synnex',
     mayoristSku: 'SYN-SON-ARC',
     mayoristPrice: 699.99,
@@ -60,36 +68,69 @@ const SYNNEX_PRODUCTS: MayoristaProduct[] = [
     description: 'Hub USB-C con múltiples puertos',
     price: 149.99,
     stock: 178,
+    inStock: true,
     category: 'Accessories',
     brand: 'Belkin',
+    rating: 4.4,
     mayorista: 'synnex',
     mayoristSku: 'SYN-BLK-HUB7',
     mayoristPrice: 119.99,
   },
 ]
 
-export async function searchSynnex(query: SearchQuery): Promise<SearchResult> {
-  const searchTerm = query.q.toLowerCase()
+function applyFilters(
+  products: MayoristaProduct[],
+  query: SearchQuery
+): MayoristaProduct[] {
+  return products.filter((product) => {
+    // Text search
+    if (query.q) {
+      const q = query.q.toLowerCase()
+      const matchesText =
+        product.name.toLowerCase().includes(q) ||
+        product.description?.toLowerCase().includes(q) ||
+        product.brand?.toLowerCase().includes(q)
+      if (!matchesText) return false
+    }
 
-  const filtered = SYNNEX_PRODUCTS.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm) ||
-      product.sku.toLowerCase().includes(searchTerm) ||
-      product.brand?.toLowerCase().includes(searchTerm)
+    // Category filter
+    if (
+      query.category &&
+      !product.category?.toLowerCase().includes(query.category.toLowerCase())
+    ) {
+      return false
+    }
 
-    const matchesCategory = !query.category || product.category === query.category
-    const matchesPrice =
-      (!query.priceMin || product.price >= query.priceMin) &&
-      (!query.priceMax || product.price <= query.priceMax)
+    // Brand filter
+    if (query.brand && product.brand?.toLowerCase() !== query.brand.toLowerCase()) {
+      return false
+    }
 
-    return matchesSearch && matchesCategory && matchesPrice
+    // Price range
+    if (query.minPrice !== undefined && product.price < query.minPrice) {
+      return false
+    }
+    if (query.maxPrice !== undefined && product.price > query.maxPrice) {
+      return false
+    }
+
+    // Stock filter
+    const minStockRequired = query.minStock ?? 1
+    if (product.stock < minStockRequired) {
+      return false
+    }
+
+    // Rating filter
+    if (query.minRating && (!product.rating || product.rating < query.minRating)) {
+      return false
+    }
+
+    return true
   })
+}
 
-  return {
-    products: filtered,
-    total: filtered.length,
-    mayorista: 'synnex',
-  }
+export async function searchSynnex(query: SearchQuery): Promise<MayoristaProduct[]> {
+  return applyFilters(SYNNEX_PRODUCTS, query)
 }
 
 export async function syncSynnex(): Promise<number> {

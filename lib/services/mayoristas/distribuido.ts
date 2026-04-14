@@ -1,4 +1,4 @@
-import { MayoristaProduct, SearchQuery, SearchResult } from '@/lib/types/mayorista'
+import { MayoristaProduct, SearchQuery } from '@/lib/types/mayorista'
 
 const DISTRIBUIDO_PRODUCTS: MayoristaProduct[] = [
   {
@@ -8,8 +8,10 @@ const DISTRIBUIDO_PRODUCTS: MayoristaProduct[] = [
     description: 'Laptop balanceada para estudiantes',
     price: 599.99,
     stock: 67,
+    inStock: true,
     category: 'Laptop',
     brand: 'HP',
+    rating: 4.3,
     mayorista: 'distribuido',
     mayoristSku: 'DIST-HP-PAV15',
     mayoristPrice: 549.99,
@@ -21,8 +23,10 @@ const DISTRIBUIDO_PRODUCTS: MayoristaProduct[] = [
     description: 'Gaming laptop de alto rendimiento',
     price: 1799.99,
     stock: 23,
+    inStock: true,
     category: 'Laptop',
     brand: 'ASUS',
+    rating: 4.7,
     mayorista: 'distribuido',
     mayoristSku: 'DIST-ASUS-ROG',
     mayoristPrice: 1699.99,
@@ -34,8 +38,10 @@ const DISTRIBUIDO_PRODUCTS: MayoristaProduct[] = [
     description: 'Procesador flagship para gaming/workstation',
     price: 599.99,
     stock: 41,
+    inStock: true,
     category: 'CPU',
     brand: 'Intel',
+    rating: 4.6,
     mayorista: 'distribuido',
     mayoristSku: 'DIST-INTEL-I9',
     mayoristPrice: 549.99,
@@ -47,8 +53,10 @@ const DISTRIBUIDO_PRODUCTS: MayoristaProduct[] = [
     description: 'Memoria RAM DDR5 de alto rendimiento',
     price: 149.99,
     stock: 156,
+    inStock: true,
     category: 'RAM',
     brand: 'Kingston',
+    rating: 4.4,
     mayorista: 'distribuido',
     mayoristSku: 'DIST-KING-DDR5',
     mayoristPrice: 129.99,
@@ -60,36 +68,69 @@ const DISTRIBUIDO_PRODUCTS: MayoristaProduct[] = [
     description: 'Fuente modular para gaming/workstation',
     price: 119.99,
     stock: 87,
+    inStock: true,
     category: 'Power Supply',
     brand: 'Corsair',
+    rating: 4.5,
     mayorista: 'distribuido',
     mayoristSku: 'DIST-CORS-RM850',
     mayoristPrice: 99.99,
   },
 ]
 
-export async function searchDistribuido(query: SearchQuery): Promise<SearchResult> {
-  const searchTerm = query.q.toLowerCase()
+function applyFilters(
+  products: MayoristaProduct[],
+  query: SearchQuery
+): MayoristaProduct[] {
+  return products.filter((product) => {
+    // Text search
+    if (query.q) {
+      const q = query.q.toLowerCase()
+      const matchesText =
+        product.name.toLowerCase().includes(q) ||
+        product.description?.toLowerCase().includes(q) ||
+        product.brand?.toLowerCase().includes(q)
+      if (!matchesText) return false
+    }
 
-  const filtered = DISTRIBUIDO_PRODUCTS.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm) ||
-      product.sku.toLowerCase().includes(searchTerm) ||
-      product.brand?.toLowerCase().includes(searchTerm)
+    // Category filter
+    if (
+      query.category &&
+      !product.category?.toLowerCase().includes(query.category.toLowerCase())
+    ) {
+      return false
+    }
 
-    const matchesCategory = !query.category || product.category === query.category
-    const matchesPrice =
-      (!query.priceMin || product.price >= query.priceMin) &&
-      (!query.priceMax || product.price <= query.priceMax)
+    // Brand filter
+    if (query.brand && product.brand?.toLowerCase() !== query.brand.toLowerCase()) {
+      return false
+    }
 
-    return matchesSearch && matchesCategory && matchesPrice
+    // Price range
+    if (query.minPrice !== undefined && product.price < query.minPrice) {
+      return false
+    }
+    if (query.maxPrice !== undefined && product.price > query.maxPrice) {
+      return false
+    }
+
+    // Stock filter
+    const minStockRequired = query.minStock ?? 1
+    if (product.stock < minStockRequired) {
+      return false
+    }
+
+    // Rating filter
+    if (query.minRating && (!product.rating || product.rating < query.minRating)) {
+      return false
+    }
+
+    return true
   })
+}
 
-  return {
-    products: filtered,
-    total: filtered.length,
-    mayorista: 'distribuido',
-  }
+export async function searchDistribuido(query: SearchQuery): Promise<MayoristaProduct[]> {
+  return applyFilters(DISTRIBUIDO_PRODUCTS, query)
 }
 
 export async function syncDistribuido(): Promise<number> {
