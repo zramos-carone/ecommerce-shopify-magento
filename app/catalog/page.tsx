@@ -5,8 +5,10 @@ import { MayoristaProduct, SearchResult } from '@/lib/types/mayorista'
 import { FilterSidebar } from '@/components/FilterSidebar'
 import { ProductGrid } from '@/components/ProductGrid'
 import { SearchBar } from '@/components/SearchBar'
+import { useCart } from '@/hooks/useCart'
 
 export default function CatalogPage() {
+  const { addToCart } = useCart()
   const [products, setProducts] = useState<MayoristaProduct[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -100,7 +102,7 @@ export default function CatalogPage() {
               </div>
             )}
 
-            <ProductGrid products={products} isLoading={isLoading} />
+            <ProductGrid products={products} isLoading={isLoading} onAddToCart={addToCart} />
 
             {/* Pagination */}
             {totalPages > 1 && (

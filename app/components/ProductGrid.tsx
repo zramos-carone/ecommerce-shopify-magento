@@ -6,9 +6,10 @@ import { ProductCard } from './ProductCard'
 interface ProductGridProps {
   products: MayoristaProduct[]
   isLoading?: boolean
+  onAddToCart?: (product: MayoristaProduct) => void
 }
 
-export function ProductGrid({ products, isLoading = false }: ProductGridProps) {
+export function ProductGrid({ products, isLoading = false, onAddToCart }: ProductGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -36,9 +37,10 @@ export function ProductGrid({ products, isLoading = false }: ProductGridProps) {
         <ProductCard
           key={product.id}
           product={product}
-          onAddToCart={(p) => console.log('Add to cart:', p.name)}
+          onAddToCart={onAddToCart}
         />
       ))}
     </div>
   )
 }
+
