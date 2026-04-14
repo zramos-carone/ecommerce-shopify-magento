@@ -1,12 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { syncIngram, syncDistribuido, syncSynnex } from '@/lib/services/mayoristas'
 import { prisma } from '@/lib/db'
 
 /**
- * POST /api/mayoristas/sync
- * Sincroniza todos los mayoristas en paralelo
+ * @swagger
+ * /api/mayoristas/sync:
+ *   post:
+ *     tags:
+ *       - Mayoristas
+ *     summary: Sincronizar productos de todos los mayoristas
+ *     description: Inicia un proceso de sincronización de productos desde los 3 mayoristas hacia la base de datos local
+ *     responses:
+ *       200:
+ *         description: Sincronización completada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SyncResult'
+ *       500:
+ *         description: Error al sincronizar
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('[SYNC] Starting mayorista sync...')
 

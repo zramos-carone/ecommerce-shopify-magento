@@ -3,12 +3,61 @@ import { searchAllMayoristas } from '@/lib/services/mayoristas'
 import { SearchQuery } from '@/lib/types/mayorista'
 
 /**
- * GET /api/mayoristas/search
- * Query params:
- *   - q: string (búsqueda)
- *   - category?: string (filtro por categoría)
- *   - priceMin?: number (precio mínimo)
- *   - priceMax?: number (precio máximo)
+ * @swagger
+ * /api/mayoristas/search:
+ *   get:
+ *     tags:
+ *       - Mayoristas
+ *     summary: Buscar productos en todos los mayoristas
+ *     description: Busca productos en Ingram, Distribuido y Synnex. Retorna resultados agregados y ordenados por precio.
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda (nombre, SKU, marca)
+ *         example: laptop
+ *       - in: query
+ *         name: category
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filtrar por categoría
+ *         example: Laptop
+ *       - in: query
+ *         name: priceMin
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Precio mínimo en USD
+ *         example: 100
+ *       - in: query
+ *         name: priceMax
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Precio máximo en USD
+ *         example: 2000
+ *     responses:
+ *       200:
+ *         description: Búsqueda exitosa
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SearchResult'
+ *       400:
+ *         description: Falta parámetro requerido "q"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 export async function GET(request: NextRequest) {
   try {
