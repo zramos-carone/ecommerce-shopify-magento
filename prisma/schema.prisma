@@ -82,21 +82,29 @@ model CartItem {
 model Order {
   id          String   @id @default(cuid())
   orderNumber String   @unique
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  
+  // Customer info (no requiere userId si no hay auth)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Contact info
+  email       String
+  phone       String
+  firstName   String
+  lastName    String
+  
+  // Shipping address
+  address     String
+  city        String
+  postalCode  String
+  country     String  @default("Mexico")
   
   items       OrderItem[]
-  
-  // Dirección de envío
-  shippingAddress String
-  shippingCity    String
-  shippingState   String
-  shippingZip     String
   
   // Totales
   subtotal    Float
   tax         Float
-  shipping    Float
+  shipping    Float  @default(0)
   total       Float
   
   // Estado
@@ -114,6 +122,7 @@ model Order {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([email])
   @@index([userId])
   @@index([status])
 }
