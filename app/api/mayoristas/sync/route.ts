@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { syncIngram, syncDistribuido, syncSynnex } from '@/lib/services/mayoristas'
 import { prisma } from '@/lib/db'
 
+// Force dynamic rendering for database operations
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/mayoristas/sync:

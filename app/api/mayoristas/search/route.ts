@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { searchAllMayoristas } from '@/lib/services/mayoristas'
 import { SearchQuery } from '@/lib/types/mayorista'
 
+// Force dynamic rendering because this route uses query parameters
+export const dynamic = 'force-dynamic'
+
 /**
  * @swagger
  * /api/mayoristas/search:
