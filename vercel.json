@@ -2,40 +2,5 @@
   "buildCommand": "pnpm build",
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "regions": ["mex1"],
-  "env": {
-    "DATABASE_URL": {
-      "description": "SQLite database URL",
-      "required": true
-    },
-    "NEXT_PUBLIC_STRIPE_PUBLIC_KEY": {
-      "description": "Stripe publishable key",
-      "required": true
-    },
-    "STRIPE_SECRET_KEY": {
-      "description": "Stripe secret key",
-      "required": true,
-      "encrypted": true
-    },
-    "STRIPE_WEBHOOK_SECRET": {
-      "description": "Stripe webhook signing secret",
-      "required": true,
-      "encrypted": true
-    },
-    "PAYPAL_CLIENT_ID": {
-      "description": "PayPal client ID",
-      "required": true
-    },
-    "PAYPAL_CLIENT_SECRET": {
-      "description": "PayPal client secret",
-      "required": true,
-      "encrypted": true
-    },
-    "RESEND_API_KEY": {
-      "description": "Resend API key for emails",
-      "required": false,
-      "encrypted": true
-    }
-  }
+  "framework": "nextjs"
 }
