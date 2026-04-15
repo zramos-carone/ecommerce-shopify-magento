@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { Order } from '@prisma/client';
+import { prisma } from '@/lib/db';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -234,5 +235,44 @@ export async function sendOrderShippedEmail(
   } catch (error) {
     console.error('❌ Failed to send shipped email:', error);
     throw error;
+  }
+}
+
+/**
+ * Deduct stock after successful payment
+ */
+export async function deductOrderStock(orderId: string) {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true },
+    });
+
+    if (!order) {
+      console.error(`❌ Order not found: ${orderId}`);
+      return false;
+    }
+
+    // Deduct stock for each item
+    let itemsDeducted = 0;
+    for (const item of order.items) {
+      await prisma.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: {
+            decrement: item.quantity,
+          },
+        },
+      });
+
+      console.log(`📦 Stock deducted: Product ${item.productId} (-${item.quantity})`);
+      itemsDeducted++;
+    }
+
+    console.log(`✅ Stock deducted for order ${order.orderNumber}: ${itemsDeducted} items`);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to deduct stock:', error);
+    return false;
   }
 }
