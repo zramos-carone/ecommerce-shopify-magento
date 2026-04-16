@@ -5,15 +5,12 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboardPage() {
-  // Fetch metrics in parallel
   const [
     totalOrders,
-    _completedOrders,
     totalProducts,
     recentOrders
   ] = await Promise.all([
     prisma.order.count(),
-    prisma.order.findMany({ where: { status: 'completed' } }), // Assuming 'completed' or 'delivered' is the success state. We'll sum 'total'.
     prisma.product.count(),
     prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
@@ -30,18 +27,19 @@ export default async function AdminDashboardPage() {
     })
   ]);
 
-  // Calculate total sales
-  // To be safe we sum all orders that are not 'cancelled' or 'failed'
-  const validOrders = await prisma.order.findMany({
+  // Calculate total Sales using efficient aggregation
+  const salesAggregate = await prisma.order.aggregate({
     where: {
       status: {
         notIn: ['cancelled', 'failed']
       }
     },
-    select: { total: true }
+    _sum: {
+      total: true
+    }
   });
   
-  const totalSales = validOrders.reduce((sum, order) => sum + order.total, 0);
+  const totalSales = salesAggregate._sum.total || 0;
 
   return (
     <div className="space-y-6">
