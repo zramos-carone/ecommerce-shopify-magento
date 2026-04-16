@@ -8,7 +8,7 @@ export default async function AdminDashboardPage() {
   // Fetch metrics in parallel
   const [
     totalOrders,
-    completedOrders,
+    _completedOrders,
     totalProducts,
     recentOrders
   ] = await Promise.all([
