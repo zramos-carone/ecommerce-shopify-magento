@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -10,117 +8,91 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========== USUARIOS ==========
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String?
   password  String
-  role      String     @default("customer") // customer, admin
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  orders     Order[]
-  cart       Cart?
-  addresses  Address[]
+  role      String    @default("customer")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  addresses Address[]
+  cart      Cart?
+  orders    Order[]
 
   @@index([email])
 }
 
-// ========== PRODUCTOS ==========
 model Product {
-  id          String   @id @default(cuid())
-  sku         String   @unique
-  name        String
-  description String?
-  price       Float
-  image       String?
-  stock       Int      @default(0)
-  category    String?
-  brand       String?
-  
-  // Mayorista info
-  mayoristId  String?  // Ingram, Distribuido, Synnex
-  mayoristSku String?
+  id            String      @id @default(cuid())
+  sku           String      @unique
+  name          String
+  description   String?
+  price         Float
+  image         String?
+  stock         Int         @default(0)
+  category      String?
+  brand         String?
+  mayoristId    String?
+  mayoristSku   String?
   mayoristPrice Float?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
 
   @@index([category])
   @@index([brand])
   @@index([mayoristId])
 }
 
-// ========== CARRITO ==========
 model Cart {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     CartItem[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model CartItem {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   cartId    String
-  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int     @default(1)
+  quantity  Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId])
 }
 
-// ========== ÓRDENES ==========
 model Order {
-  id          String   @id @default(cuid())
-  orderNumber String   @unique
-  
-  // Customer info (no requiere userId si no hay auth)
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  // Contact info
-  email       String
-  phone       String
-  firstName   String
-  lastName    String
-  
-  // Shipping address
-  address     String
-  city        String
-  postalCode  String
-  country     String  @default("Mexico")
-  
-  items       OrderItem[]
-  
-  // Totales
-  subtotal    Float
-  tax         Float
-  shipping    Float  @default(0)
-  total       Float
-  
-  // Estado
-  status      String   @default("pending") // pending, processing, shipped, delivered, cancelled
-  
-  // Pagos
-  paymentId   String?
-  paymentStatus String @default("pending") // pending, completed, failed
-  paymentMethod String? // stripe, paypal
-  
-  // Tracking
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  userId         String?
+  email          String
+  phone          String
+  firstName      String
+  lastName       String
+  address        String
+  city           String
+  postalCode     String
+  country        String      @default("Mexico")
+  subtotal       Float
+  tax            Float
+  shipping       Float       @default(0)
+  total          Float
+  status         String      @default("pending")
+  paymentId      String?
+  paymentStatus  String      @default("pending")
+  paymentMethod  String?
   trackingNumber String?
-  
-  // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  user           User?       @relation(fields: [userId], references: [id])
+  items          OrderItem[]
 
   @@index([email])
   @@index([userId])
@@ -128,74 +100,64 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
   productName String
-  quantity  Int
-  price     Float // Precio al momento de la orden
-  subtotal  Float
-  createdAt DateTime @default(now())
+  quantity    Int
+  price       Float
+  subtotal    Float
+  createdAt   DateTime @default(now())
+  product     Product  @relation(fields: [productId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
 }
 
-// ========== DIRECCIONES ==========
 model Address {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   fullName  String
   street    String
   city      String
   state     String
   zip       String
-  country   String @default("MX")
-  
-  isDefault Boolean @default(false)
+  country   String   @default("MX")
+  isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// ========== PAGOS (Stripe/PayPal) ==========
 model Payment {
-  id            String  @id @default(cuid())
-  orderId       String  @unique
-  
+  id             String   @id @default(cuid())
+  orderId        String   @unique
   stripeIntentId String?
   paypalOrderId  String?
-  
-  amount        Float
-  status        String  @default("pending") // pending, completed, failed, refunded
-  method        String  // stripe, paypal
-  
-  metadata      String? // JSON stringified
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  amount         Float
+  status         String   @default("pending")
+  method         String
+  metadata       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([orderId])
 }
 
-// ========== SINCRONIZACIÓN MAYORISTAS ==========
 model MayoristaSync {
-  id            String   @id @default(cuid())
-  mayorista     String   // ingram, distribuido, synnex
-  syncedAt      DateTime @default(now())
-  productCount  Int
-  status        String   @default("pending") // pending, completed, failed
-  error         String?
-  
+  id           String   @id @default(cuid())
+  mayorista    String
+  syncedAt     DateTime @default(now())
+  productCount Int
+  status       String   @default("pending")
+  error        String?
+
   @@index([mayorista])
   @@index([syncedAt])
 }
 
-// ========== PROMOCIONES ==========
 model Promotion {
   id              String   @id @default(cuid())
   code            String   @unique

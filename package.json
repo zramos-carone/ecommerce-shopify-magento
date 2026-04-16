@@ -22,7 +22,8 @@
     "db:reset": "prisma migrate reset",
     "clean": "rm -rf .next node_modules .turbo",
     "swagger:generate": "node scripts/swagger.js",
-    "test:load": "tsx scripts/test-orders-bot.ts"
+    "test:load": "tsx scripts/test-orders-bot.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.5.0",
