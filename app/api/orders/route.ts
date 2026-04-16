@@ -86,6 +86,7 @@ export async function POST(req: Request) {
 
       orderItems.push({
         productId: item.productId,
+        productName: product.name,
         quantity: item.quantity,
         price: item.price,
         subtotal: lineSubtotal,
