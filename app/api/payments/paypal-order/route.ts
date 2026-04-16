@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { createPayPalOrder } from '@/lib/services/payments/paypal';
 
 /**
  * POST /api/payments/paypal-order
@@ -39,10 +40,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // In a real implementation, call PayPal API here:
-    // const paypalOrder = await paypalClient.createOrder(...)
-    // For demo, generate mock PayPal order ID
-    const paypalOrderId = `PAYPAL-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    // Call PayPal Core Service
+    const paypalResponse = await createPayPalOrder(amount, orderId);
+    const paypalOrderId = paypalResponse.id;
 
     // Store PayPal order ID in database for webhook matching
     await prisma.order.update({
@@ -53,7 +53,9 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log(`📦 PayPal order created: ${paypalOrderId} for order ${order.orderNumber}`);
+    console.log(`📦 PayPal order requested via API standalone: ${paypalOrderId}`);
+
+    const approveUrl = paypalResponse.links?.find((link: any) => link.rel === 'approve')?.href || `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
 
     return NextResponse.json({
       success: true,
@@ -61,8 +63,7 @@ export async function POST(req: Request) {
       orderNumber: order.orderNumber,
       amount: amount.toFixed(2),
       currency: 'MXN',
-      // In production, this would be the actual PayPal approval URL
-      approvalUrl: `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`,
+      approvalUrl: approveUrl,
       redirectUrl: `/payment?method=paypal&paypalOrderId=${paypalOrderId}`,
     });
   } catch (error) {

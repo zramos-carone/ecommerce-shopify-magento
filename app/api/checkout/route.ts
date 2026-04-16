@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import Stripe from 'stripe';
+import { createPayPalOrder } from '@/lib/services/payments/paypal';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2023-08-16',
@@ -170,20 +171,28 @@ export async function POST(req: Request) {
         );
       }
     } else if (paymentMethod === 'paypal') {
-      // Crear PayPal Order
-      const paypalOrderId = `PAYPAL-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      // Crear PayPal Order Reál En API Externa
+      try {
+        const paypalResponse = await createPayPalOrder(total, order.id);
+        const paypalOrderId = paypalResponse.id;
+        
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { paymentId: paypalOrderId },
+        });
 
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { paymentId: paypalOrderId },
-      });
+        const approveUrl = paypalResponse.links?.find((link: any) => link.rel === 'approve')?.href || `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
 
-      paymentDetails = {
-        paypalOrderId,
-        approvalUrl: `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`,
-      };
+        paymentDetails = {
+          paypalOrderId,
+          approvalUrl: approveUrl,
+        };
 
-      console.log(`🅿️ PayPal Order created: ${paypalOrderId}`);
+        console.log(`🅿️ PayPal Order link generated: ${paypalOrderId}`);
+      } catch (err) {
+        console.error('❌ Falló la generación de cuota PayPal', err);
+        throw new Error('PayPal payment creation failed');
+      }
     }
 
     // 8️⃣ Retornar respuesta
