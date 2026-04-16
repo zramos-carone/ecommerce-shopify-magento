@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       firstName,
       lastName,
       phone,
+      couponCode,
     } = await req.json();
 
     // Validar datos requeridos
@@ -59,13 +60,31 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2️⃣ Calcular subtotal
-    const subtotal = Number(
+    // 2️⃣ Calcular subtotal (bruto)
+    let subtotal = Number(
       (cartItems.reduce(
         (sum: number, item: any) => sum + item.price * item.quantity,
         0
       ).toFixed(2))
     );
+
+    // 2.5️⃣ Aplicar Descuento de Promoción
+    let discountAmount = 0;
+    let appliedCoupon = null;
+
+    if (couponCode) {
+      const upperCode = couponCode.toUpperCase().trim();
+      const promo = await prisma.promotion.findUnique({
+        where: { code: upperCode }
+      });
+
+      if (promo && promo.active) {
+        discountAmount = subtotal * (promo.discountPercent / 100);
+        appliedCoupon = upperCode;
+      }
+    }
+
+    subtotal = Number((subtotal - discountAmount).toFixed(2));
 
     // 3️⃣ Calcular shipping
     const shippingCost = calculateShipping(shippingAddress, subtotal);
@@ -176,6 +195,8 @@ export async function POST(req: Request) {
       paymentDetails,
       orderSummary: {
         subtotal: subtotal.toFixed(2),
+        discountAmount: discountAmount.toFixed(2),
+        coupon: appliedCoupon,
         shipping: shippingCost.toFixed(2),
         tax: tax.toFixed(2),
         total: total.toFixed(2),

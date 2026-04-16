@@ -193,3 +193,15 @@ model MayoristaSync {
   @@index([mayorista])
   @@index([syncedAt])
 }
+
+// ========== PROMOCIONES ==========
+model Promotion {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  discountPercent Float
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+}
