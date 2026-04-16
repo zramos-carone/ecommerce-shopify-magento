@@ -2,7 +2,21 @@ import { Resend } from 'resend';
 import { Order } from '@prisma/client';
 import { prisma } from '@/lib/db';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+
+/**
+ * Lazy initialization of Resend client to avoid build-time errors
+ * when the API key is missing.
+ */
+function getResend() {
+  if (!resendInstance) {
+    const apiKey = process.env.RESEND_API_KEY;
+    // During build or if missing, we use a placeholder to avoid constructor crash.
+    // The actual error will only happen if we try to SEND an email without a key.
+    resendInstance = new Resend(apiKey || 're_build_placeholder');
+  }
+  return resendInstance;
+}
 
 /**
  * Send order confirmation email to customer
@@ -69,7 +83,7 @@ export async function sendOrderConfirmationEmail(
       </html>
     `;
 
-    const response = await resend.emails.send({
+    const response = await getResend().emails.send({
       from: 'orders@ecommerce.local',
       to: order.email,
       subject: `¡Orden confirmada! #${order.orderNumber}`,
@@ -151,7 +165,7 @@ export async function sendOrderFailureEmail(
       </html>
     `;
 
-    const response = await resend.emails.send({
+    const response = await getResend().emails.send({
       from: 'support@ecommerce.local',
       to: order.email,
       subject: `Problema con tu pago - Orden #${order.orderNumber}`,
@@ -223,7 +237,7 @@ export async function sendOrderShippedEmail(
       </html>
     `;
 
-    const response = await resend.emails.send({
+    const response = await getResend().emails.send({
       from: 'orders@ecommerce.local',
       to: order.email,
       subject: `Tu orden ha sido enviada - #${order.orderNumber}`,
