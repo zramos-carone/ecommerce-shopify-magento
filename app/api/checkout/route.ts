@@ -122,6 +122,7 @@ export async function POST(req: Request) {
             productName: item.name,
             quantity: item.quantity,
             price: item.price,
+            subtotal: Number((item.price * item.quantity).toFixed(2)),
           })),
         },
       },

@@ -133,6 +133,7 @@ model OrderItem {
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id])
+  productName String
   quantity  Int
   price     Float // Precio al momento de la orden
   subtotal  Float
