@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { CPU, Zap, Shield, Truck, ArrowRight } from 'lucide-react';
+import { Cpu, Zap, Shield, Truck, ArrowRight, User } from 'lucide-react';
 import GlassCard from '../components/ui/GlassCard';
 import AnimatedButton from '../components/ui/AnimatedButton';
 
@@ -83,7 +83,7 @@ export default function Home() {
                 <GlassCard className="absolute -bottom-6 -left-6 p-4 max-w-[200px] hidden sm:block">
                   <div className="flex items-center space-x-3">
                     <div className="p-2 bg-blue-600 rounded-lg text-white">
-                      <CPU className="w-5 h-5" />
+                      <Cpu className="w-5 h-5" />
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 font-bold uppercase">Procesador</p>
