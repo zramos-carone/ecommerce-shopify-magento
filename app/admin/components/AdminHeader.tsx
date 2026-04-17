@@ -1,6 +1,8 @@
 "use client";
 
 import { Bell, UserCircle, Search, Settings } from "lucide-react";
+import { BRAND_CONFIG } from "@/lib/config/branding";
+
 export default function AdminHeader() {
   return (
     <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 h-20 flex items-center justify-between px-10 flex-shrink-0 sticky top-0 z-20">
@@ -31,7 +33,7 @@ export default function AdminHeader() {
               Root Access
             </p>
             <p className="text-xs font-black text-gray-900 font-outfit uppercase">
-              Admin MaxTech
+              Admin {BRAND_CONFIG.shortName}
             </p>
           </div>
           <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white ring-4 ring-gray-50">

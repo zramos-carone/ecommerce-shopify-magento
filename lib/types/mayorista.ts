@@ -11,7 +11,7 @@ export interface MayoristaProduct {
   brand?: string;
   rating?: number;
   imageUrl?: string;
-  mayorista: "ingram" | "distribuido" | "synnex" | "MAXTECH";
+  mayorista: string; // "ingram" | "distribuido" | "synnex" | branding.identityName
   mayoristSku: string;
   mayoristPrice: number;
 }

@@ -1,24 +1,27 @@
-import type { Metadata } from 'next'
-import { Inter, Outfit } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from "next";
+import { Inter, Outfit } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+
+import { BRAND_CONFIG } from "@/lib/config/branding";
 
 export const metadata: Metadata = {
-  title: 'MaxTech Ecommerce - Venta de Productos Tecnológicos',
-  description: 'Plataforma ecommerce moderna para venta de laptops, hardware, software y accesorios tecnológicos en México',
-  keywords: 'ecommerce, tecnología, laptops, hardware, software, México',
-  authors: [{ name: 'Ecommerce MVP Team' }],
-}
+  title: BRAND_CONFIG.metaTitle,
+  description: BRAND_CONFIG.metaDescription,
+  keywords:
+    "ecommerce, tecnología, laptops, hardware, software, México, white-label",
+  authors: [{ name: BRAND_CONFIG.fullName }],
+};
 
-import { CartProvider } from '@/context/CartContext'
-import NextAuthProvider from '@/app/components/NextAuthProvider'
+import { CartProvider } from "@/context/CartContext";
+import NextAuthProvider from "@/app/components/NextAuthProvider";
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="es">
@@ -26,13 +29,13 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className={`${inter.variable} ${outfit.variable} font-inter antialiased`}>
+      <body
+        className={`${inter.variable} ${outfit.variable} font-inter antialiased`}
+      >
         <NextAuthProvider>
-          <CartProvider>
-            {children}
-          </CartProvider>
+          <CartProvider>{children}</CartProvider>
         </NextAuthProvider>
       </body>
     </html>
-  )
+  );
 }

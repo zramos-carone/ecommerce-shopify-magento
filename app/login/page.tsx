@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Zap, Mail, Lock, Loader2, AlertCircle } from "lucide-react";
+import { BRAND_CONFIG } from "@/lib/config/branding";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -56,10 +57,11 @@ export default function LoginPage() {
             <Zap className="w-8 h-8 text-white" fill="white" />
           </div>
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter font-outfit">
-            MAX<span className="text-blue-500">CORP</span>
+            {BRAND_CONFIG.shortName}
+            <span className="text-blue-500">{BRAND_CONFIG.accentName}</span>
           </h1>
           <p className="text-gray-500 text-xs font-black uppercase tracking-[0.3em] mt-2">
-            Acceso al Command Center
+            Acceso al {BRAND_CONFIG.adminPanelName}
           </p>
         </div>
 

@@ -2,6 +2,7 @@ import { GET } from "@/app/api/mayoristas/search/route";
 import { NextRequest } from "next/server";
 import { searchAllMayoristas } from "@/lib/services/mayoristas";
 import { prisma } from "@/lib/db";
+import { BRAND_CONFIG } from "@/lib/config/branding";
 
 // Mock de las dependencias
 jest.mock("@/lib/services/mayoristas");
@@ -57,7 +58,7 @@ describe("API Search - Boutique Transformation logic", () => {
     const data = await response.json();
 
     // 3. Verificaciones de la "Boutique"
-    expect(data.products[0].mayorista).toBe("MAXTECH"); // Identidad protegida
+    expect(data.products[0].mayorista).toBe(BRAND_CONFIG.identityName); // Identidad protegida
     expect(data.products[0].name).toBe("MaxTech Extreme Edition RTX 4090"); // Override de nombre exitoso
     expect(data.products[0].price).toBe(1800); // Precio premium aplicado
     expect(data.products[0].imageUrl).toBe("http://maxtech.com/pro-photo.jpg"); // Foto curada
