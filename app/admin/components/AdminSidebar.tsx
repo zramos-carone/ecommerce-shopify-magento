@@ -10,9 +10,11 @@ import {
   ExternalLink,
   Tag,
   Zap,
-  Globe
+  Globe,
+  LogOut
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { signOut } from 'next-auth/react';
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -109,7 +111,7 @@ export default function AdminSidebar() {
       </div>
 
       {/* Footer Area */}
-      <div className="p-6 border-t border-white/5 mb-4">
+      <div className="p-6 border-t border-white/5 mb-4 space-y-3">
         <Link 
           href="/"
           className="flex items-center justify-between px-5 py-4 bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-white hover:bg-blue-600 transition-all group"
@@ -125,6 +127,15 @@ export default function AdminSidebar() {
             →
           </motion.div>
         </Link>
+
+        {/* Cierre de Sesión */}
+        <button 
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="w-full flex items-center px-5 py-4 bg-red-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all group border border-red-500/10"
+        >
+          <LogOut className="mr-3 h-4 w-4" />
+          <span>Cerrar Sesión</span>
+        </button>
       </div>
     </div>
   );
