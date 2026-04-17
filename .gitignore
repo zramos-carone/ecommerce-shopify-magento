@@ -5,6 +5,7 @@ pnpm-lock.yaml
 
 # Development
 .env*
+.env.production
 !.env.example
 .env.local.backup
 .vscode/
