@@ -1,6 +1,8 @@
-# Ecommerce MVP - Plataforma de Comercio Electrónico
+# MaxTech - Plataforma Ecommerce MVP México Electrónico
 
 ![Status](https://img.shields.io/badge/status-in%20planning-blue) ![Timeline](https://img.shields.io/badge/timeline-6%20weeks-green) ![Stack](https://img.shields.io/badge/stack-Next.js-black)
+
+# Resumen Ejecutivo: MaxTech - E-commerce de Nueva Generación en México
 
 Plataforma de ecommerce MVP para venta de productos tecnológicos en México, con integración de mayoristas (Ingram Micro, Distribuido, Synnex), sistema de pagos robusto (Stripe + PayPal), y deployment automático en Vercel.
 

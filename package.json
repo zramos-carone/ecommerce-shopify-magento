@@ -1,8 +1,8 @@
 {
-  "name": "ecommerce-mvp",
+  "name": "maxtech-ecommerce",
   "version": "0.1.0",
   "private": true,
-  "description": "Plataforma ecommerce MVP para venta de productos tecnológicos en México",
+  "description": "MaxTech - Plataforma ecommerce MVP para venta de productos tecnológicos en México",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",

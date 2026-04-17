@@ -14,8 +14,8 @@ export default function ShopLayout({
           <div className="flex justify-between h-20">
             <div className="flex items-center">
               <Link href="/" className="flex items-center space-x-2">
-                <span className="text-3xl font-black tracking-tighter text-blue-600 font-outfit">
-                  TEC<span className="text-gray-900">NO</span>
+                <span className="text-3xl font-black tracking-tighter text-blue-600 font-outfit uppercase">
+                  MAX<span className="text-gray-900">TECH</span>
                 </span>
               </Link>
             </div>
@@ -54,8 +54,8 @@ export default function ShopLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-1 md:col-span-1">
-              <span className="text-2xl font-black tracking-tighter text-blue-600 font-outfit mb-4 block">
-                TEC<span className="text-gray-900">NO</span>
+              <span className="text-2xl font-black tracking-tighter text-blue-600 font-outfit mb-4 block uppercase">
+                MAX<span className="text-gray-900">TECH</span>
               </span>
               <p className="text-gray-500 text-sm leading-relaxed">
                 Tu socio tecnológico de confianza. Ofreciendo los mejores componentes y soluciones desde 2026.
@@ -95,7 +95,7 @@ export default function ShopLayout({
             </div>
           </div>
           <div className="border-t border-gray-100 pt-8 text-center text-gray-400 text-xs">
-            <p>© 2026 TECNO Ecommerce. Todos los derechos reservados. Diseñado para el Futuro.</p>
+            <p>© 2026 MaxTech Ecommerce. Todos los derechos reservados. Diseñado para el Futuro.</p>
           </div>
         </div>
       </footer>

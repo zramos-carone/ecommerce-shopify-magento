@@ -1,4 +1,4 @@
-# Proyecto Ecommerce
+# Proyecto MaxTech
 
 ## Resumen Ejecutivo
 
@@ -7,7 +7,7 @@
 
 ### 1. Resumen General del Proyecto
 
-El **Proyecto Ecommerce** tiene como propósito el **diseño, desarrollo e implementación
+El **Proyecto MaxTech** tiene como propósito el **diseño, desarrollo e implementación
 de una plataforma integral de comercio electrónico** , enfocada en la **venta de productos
 tecnológicos** bajo un modelo moderno, automatizado y de alto rendimiento operativo.
 
@@ -275,7 +275,7 @@ internacionales.
 ### 6. Conclusión y Llamado a Proveedores
 
 ```
-El Proyecto Ecommerce, junto con su Etapa Previa de Integración con
+El Proyecto MaxTech, junto con su Etapa Previa de Integración con
 Mayoristas, representa una oportunidad estratégica para participar en la creación de
 una plataforma digital de nueva generación , que fusiona tecnología, atención humana
 e inteligencia artificial.

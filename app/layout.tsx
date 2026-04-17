@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' })
 
 export const metadata: Metadata = {
-  title: 'Ecommerce MVP - Venta de Productos Tecnológicos',
+  title: 'MaxTech Ecommerce - Venta de Productos Tecnológicos',
   description: 'Plataforma ecommerce moderna para venta de laptops, hardware, software y accesorios tecnológicos en México',
   keywords: 'ecommerce, tecnología, laptops, hardware, software, México',
   authors: [{ name: 'Ecommerce MVP Team' }],

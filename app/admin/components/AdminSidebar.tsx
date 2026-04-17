@@ -27,7 +27,9 @@ export default function AdminSidebar() {
     <div className="flex h-full flex-col bg-gray-900 text-white w-64 flex-shrink-0">
       {/* Brand area */}
       <div className="flex h-16 items-center px-6 border-b border-gray-800">
-        <span className="text-xl font-bold tracking-tight">Admin<span className="text-blue-500">Panel</span></span>
+        <span className="text-xl font-black tracking-tighter uppercase font-outfit">
+          MAX<span className="text-blue-500">TECH</span>
+        </span>
       </div>
 
       {/* Navigation */}
