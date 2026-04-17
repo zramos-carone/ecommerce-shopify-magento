@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
 import { searchAllMayoristas } from '@/lib/services/mayoristas'
 import { SearchQuery } from '@/lib/types/mayorista'
 import { rateLimiter } from '@/lib/services/rateLimit'
@@ -122,6 +123,54 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await searchAllMayoristas(query)
+
+    // --- LOGICA DE SOBREPOSICIÓN (OVERRIDES) MAXTECH ---
+    // Sincronizamos los resultados de los mayoristas con nuestra DB local
+    // para que se vean reflejados los cambios hechos en el Panel de Inventario.
+    try {
+      if (result.products && result.products.length > 0) {
+        const skus = result.products.map(p => p.sku);
+        
+        // Buscamos productos personalizados en nuestra DB local
+        const localOverrides = await prisma.product.findMany({
+          where: {
+            sku: { in: skus }
+          },
+          select: {
+            sku: true,
+            image: true,
+            name: true,
+            price: true,
+            stock: true
+          }
+        });
+
+        // Si hay sobreposiciones, las aplicamos a los resultados
+        if (localOverrides.length > 0) {
+          const overridesMap = new Map(localOverrides.map(o => [o.sku, o]));
+          
+          result.products = result.products.map(product => {
+            const override = overridesMap.get(product.sku);
+            if (override) {
+              console.log(`✨ [SYNC] Aplicando personalización local para SKU: ${product.sku}`);
+              return {
+                ...product,
+                image: override.image || product.image,
+                name: override.name || product.name,
+                // Puedes decidir si también quieres sobreponer precio y stock
+                // price: override.price || product.price,
+                // stock: override.stock || product.stock
+              };
+            }
+            return product;
+          });
+        }
+      }
+    } catch (syncError) {
+      console.error('⚠️ [SYNC_ERROR] Error al fusionar datos locales:', syncError);
+      // Continuamos con los resultados originales si falla la sincronización
+    }
+    // --------------------------------------------------
 
     return NextResponse.json(result, {
       status: 200,
