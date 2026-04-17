@@ -1,29 +1,51 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Bell, UserCircle } from 'lucide-react';
+import { Bell, UserCircle, Search, Settings } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function AdminHeader() {
   const pathname = usePathname();
 
   // Simple title mapper
-  let pageTitle = 'Dashboard';
-  if (pathname.includes('/orders')) pageTitle = 'Gestión de Órdenes';
-  if (pathname.includes('/inventory')) pageTitle = 'Inventario';
-  if (pathname.includes('/facturacion')) pageTitle = 'Facturación';
+  let pageTitle = 'Panel de Control';
+  if (pathname.includes('/orders')) pageTitle = 'Gestión Logística';
+  if (pathname.includes('/inventory')) pageTitle = 'Control de Existencias';
+  if (pathname.includes('/facturacion')) pageTitle = 'Administración Fiscal';
+  if (pathname.includes('/promotions')) pageTitle = 'Campañas y Ofertas';
 
   return (
-    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 flex-shrink-0">
-      <h1 className="text-xl font-semibold text-gray-800">{pageTitle}</h1>
+    <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 h-20 flex items-center justify-between px-10 flex-shrink-0 sticky top-0 z-20">
       
       <div className="flex items-center space-x-4">
-        <button className="text-gray-500 hover:text-gray-700 relative">
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-        </button>
-        <div className="flex items-center space-x-2 border-l pl-4 border-gray-200">
-          <UserCircle className="h-6 w-6 text-gray-400" />
-          <span className="text-sm font-medium text-gray-700 hidden sm:block">Admin User</span>
+        <div className="hidden md:flex items-center bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 w-64 group focus-within:ring-2 focus-within:ring-blue-600 transition-all">
+          <Search className="h-4 w-4 text-gray-400" />
+          <input 
+            placeholder="Comando rápido..." 
+            className="bg-transparent border-none text-xs ml-3 outline-none w-full font-medium" 
+          />
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-8">
+        <div className="flex items-center space-x-5">
+          <button className="text-gray-400 hover:text-blue-600 transition-colors relative group">
+            <Bell className="h-5 w-5" />
+            <span className="absolute -top-1 -right-1 block h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-white animate-pulse" />
+          </button>
+          <button className="text-gray-400 hover:text-black transition-colors">
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="flex items-center space-x-3 border-l pl-8 border-gray-100 h-10">
+          <div className="text-right hidden sm:block">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Root Access</p>
+            <p className="text-xs font-black text-gray-900 font-outfit uppercase">Admin MaxTech</p>
+          </div>
+          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white ring-4 ring-gray-50">
+            <UserCircle className="h-6 w-6" />
+          </div>
         </div>
       </div>
     </header>
