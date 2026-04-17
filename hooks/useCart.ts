@@ -1,26 +1,28 @@
-'use client'
+"use client";
 
-import { useCartContext } from '@/context/CartContext'
-import { MayoristaProduct } from '@/lib/types/mayorista'
+import { useCartContext, CartItem } from "@/context/CartContext";
+export type { CartItem };
+import { MayoristaProduct } from "@/lib/types/mayorista";
 
 export function useCart() {
-  const { 
-    items, 
-    addItem, 
-    removeItem, 
-    updateQuantity, 
-    clearCart, 
-    totalItems, 
-    totalPrice 
-  } = useCartContext()
+  const {
+    items,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    totalItems,
+    totalPrice,
+  } = useCartContext();
 
   return {
     cart: items || [],
-    addToCart: (product: MayoristaProduct, quantity?: number) => addItem(product, quantity),
+    addToCart: (product: MayoristaProduct, quantity?: number) =>
+      addItem(product, quantity),
     removeFromCart: (productId: string) => removeItem(productId),
     updateQuantity,
     clearCart,
     totalItems: totalItems || 0,
-    totalPrice: totalPrice || 0
-  }
+    totalPrice: totalPrice || 0,
+  };
 }

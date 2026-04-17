@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
 /**
  * PATCH /api/admin/inventory/[id]
@@ -7,28 +7,24 @@ import { prisma } from '@/lib/db';
  */
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const id = params.id;
     const body = await req.json();
 
-    const {
-      name,
-      price,
-      stock,
-      image,
-      category,
-      sku
-    } = body;
+    const { name, price, stock, image, category, sku } = body;
 
     // Validate product existence
     const existingProduct = await prisma.product.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingProduct) {
-      return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Producto no encontrado" },
+        { status: 404 },
+      );
     }
 
     // Update product
@@ -41,25 +37,29 @@ export async function PATCH(
         image: image !== undefined ? image : undefined,
         category: category !== undefined ? category : undefined,
         sku: sku !== undefined ? sku : undefined,
-      }
+      },
     });
 
-    console.log(`✅ [PRODUCT_UPDATE] Producto ${id} actualizado:`, { 
+    console.log(`✅ [PRODUCT_UPDATE] Producto ${id} actualizado:`, {
       name: updatedProduct.name,
       price: updatedProduct.price,
-      stock: updatedProduct.stock
+      stock: updatedProduct.stock,
     });
 
     return NextResponse.json({
       success: true,
-      data: updatedProduct
+      data: updatedProduct,
     });
-
   } catch (error) {
-    console.error('❌ [PRODUCT_UPDATE_ERROR]:', error);
+    console.error("❌ [PRODUCT_UPDATE_ERROR]:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Error al actualizar el producto' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Error al actualizar el producto",
+      },
+      { status: 500 },
     );
   }
 }
@@ -69,24 +69,27 @@ export async function PATCH(
  * Elimina un producto.
  */
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
+  _req: Request,
+  { params }: { params: { id: string } },
 ) {
   try {
     const id = params.id;
-    
+
     await prisma.product.delete({
-      where: { id }
+      where: { id },
     });
 
     console.log(`🗑️ [PRODUCT_DELETE] Producto ${id} eliminado.`);
 
-    return NextResponse.json({ success: true, message: 'Producto eliminado correctamente' });
+    return NextResponse.json({
+      success: true,
+      message: "Producto eliminado correctamente",
+    });
   } catch (error) {
-    console.error('❌ [PRODUCT_DELETE_ERROR]:', error);
+    console.error("❌ [PRODUCT_DELETE_ERROR]:", error);
     return NextResponse.json(
-      { error: 'Error al eliminar el producto' },
-      { status: 500 }
+      { error: "Error al eliminar el producto" },
+      { status: 500 },
     );
   }
 }
