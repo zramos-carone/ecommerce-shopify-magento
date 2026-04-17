@@ -9,7 +9,8 @@ import {
   FileText,
   ExternalLink,
   Tag,
-  Zap
+  Zap,
+  Globe
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -19,6 +20,10 @@ const navigation = [
   { name: 'Inventario', href: '/admin/inventory', icon: PackageSearch },
   { name: 'Facturación', href: '/admin/facturacion', icon: FileText },
   { name: 'Promociones', href: '/admin/promotions', icon: Tag },
+];
+
+const catalogNavigation = [
+  { name: 'Discovery Hub', href: '/admin/discover', icon: Globe },
 ];
 
 export default function AdminSidebar() {
@@ -74,6 +79,34 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
+
+      {/* Catálogo Section */}
+      <div className="px-4 pb-4">
+        <p className="px-4 text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-4">Catálogo</p>
+        {catalogNavigation.map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`flex items-center px-4 py-3.5 text-xs font-black uppercase tracking-widest rounded-2xl transition-all group relative overflow-hidden ${
+                isActive 
+                  ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/10' 
+                  : 'text-gray-500 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <item.icon
+                className={`mr-4 h-5 w-5 flex-shrink-0 transition-colors ${
+                  isActive ? 'text-white' : 'text-gray-600 group-hover:text-blue-400'
+                }`}
+              />
+              <span className="relative z-10">{item.name}</span>
+              {/* Indicador de nuevos productos disponibles */}
+              <span className="ml-auto w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Footer Area */}
       <div className="p-6 border-t border-white/5 mb-4">
