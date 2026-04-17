@@ -3,34 +3,8 @@ import { prisma } from '@/lib/db'
 
 /**
  * POST /api/orders
- * Crea nueva orden con items
- *
- * Body:
- * {
- *   items: [{ productId, quantity, price }, ...],
- *   email: string,
- *   phone: string,
- *   firstName: string,
- *   lastName: string,
- *   address: string,
- *   city: string,
- *   postalCode: string,
- *   country: string,
- *   subtotal: number,
- *   tax: number
- * }
- *
- * Response:
- * {
- *   id: string,
- *   orderNumber: string,
- *   subtotal: number,
- *   tax: number,
- *   shipping: number,
- *   total: number,
- *   status: string,
- *   createdAt: string
- * }
+ * Crea nueva orden con items.
+ * Realiza Upsert de los productos si vienen de mayoristas externos.
  */
 export async function POST(req: Request) {
   try {
@@ -49,59 +23,62 @@ export async function POST(req: Request) {
       tax = 0,
     } = body
 
-    // Validations
+    // 1. Validaciones básicas
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: 'Items required' }, { status: 400 })
+      return NextResponse.json({ error: 'Se requieren productos para la orden' }, { status: 400 })
     }
 
     if (!email || !phone || !firstName || !lastName || !address || !city || !postalCode) {
-      return NextResponse.json({ error: 'Missing required shipping info' }, { status: 400 })
+      return NextResponse.json({ error: 'Faltan datos de envío obligatorios' }, { status: 400 })
     }
 
-    // Calculate totals
+    // 2. Procesar Items y Sincronizar Productos
     let calculatedSubtotal = 0
-    const orderItems = []
+    const orderItemsCreate = []
 
     for (const item of items) {
-      // Valida que el producto existe y tiene stock
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
+      console.log(`[ORDER_API] Procesando producto: ${item.sku || item.id}`)
+
+      // UPSERT: Si el producto no existe en nuestra DB local, lo creamos
+      // Esto permite que el catálogo dinámico de mayoristas funcione con el sistema de órdenes
+      const synchronizedProduct = await prisma.product.upsert({
+        where: { sku: item.sku },
+        update: {
+          stock: { increment: -item.quantity }, // Reducir stock si ya existe
+          price: item.price, // Actualizar precio al más reciente
+        },
+        create: {
+          id: item.id, // Usamos el ID del mayorista como secundario o dejamos que genere uno
+          sku: item.sku,
+          name: item.name || 'Producto Tecnológico',
+          price: item.price,
+          brand: item.brand,
+          category: item.category,
+          stock: 100 - item.quantity, // Stock inicial ficticio menos la compra
+          image: item.imageUrl,
+        },
       })
-
-      if (!product) {
-        return NextResponse.json({ error: `Producto ${item.productId} no encontrado` }, { status: 400 })
-      }
-
-      if (product.stock < item.quantity) {
-        return NextResponse.json(
-          {
-            error: `${product.name} no tiene suficiente stock. Disponibles: ${product.stock}, Solicitados: ${item.quantity}`,
-          },
-          { status: 400 }
-        )
-      }
 
       const lineSubtotal = item.price * item.quantity
       calculatedSubtotal += lineSubtotal
 
-      orderItems.push({
-        productId: item.productId,
-        productName: product.name,
+      orderItemsCreate.push({
+        productId: synchronizedProduct.id,
+        productName: synchronizedProduct.name,
         quantity: item.quantity,
         price: item.price,
         subtotal: lineSubtotal,
       })
     }
 
-    // Usa subtotal enviado o calcula
+    // 3. Totales Finales
     const finalSubtotal = subtotal || calculatedSubtotal
     const finalTax = tax || finalSubtotal * 0.16
     const finalTotal = finalSubtotal + finalTax
 
-    // Generar order number
-    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    // 4. Crear Orden
+    const orderNumber = `MAX-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
 
-    // Crear orden
     const order = await prisma.order.create({
       data: {
         orderNumber,
@@ -120,67 +97,34 @@ export async function POST(req: Request) {
         status: 'pending',
         paymentStatus: 'pending',
         items: {
-          create: orderItems,
+          create: orderItemsCreate,
         },
       },
       include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        items: true,
       },
     })
+
+    console.log(`[ORDER_API] Orden creada con éxito: ${order.orderNumber}`)
 
     return NextResponse.json(
       {
         id: order.id,
         orderNumber: order.orderNumber,
-        email: order.email,
-        firstName: order.firstName,
-        lastName: order.lastName,
-        subtotal: order.subtotal,
-        tax: order.tax,
-        shipping: order.shipping,
         total: order.total,
         status: order.status,
-        items: order.items.map((oi: any) => ({
-          productId: oi.productId,
-          productName: oi.product.name,
-          quantity: oi.quantity,
-          price: oi.price,
-          subtotal: oi.subtotal,
-        })),
-        createdAt: order.createdAt.toISOString(),
       },
       { status: 201 }
     )
   } catch (error) {
-    console.error('Order creation error:', error)
+    console.error('[ORDER_API_ERROR]', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create order' },
+      { error: error instanceof Error ? error.message : 'Error al procesar la orden' },
       { status: 500 }
     )
   }
 }
 
-/**
- * GET /api/orders
- * Returns order creation help
- */
 export async function GET() {
-  return NextResponse.json({
-    message: 'POST /api/orders to create new order',
-    example: {
-      items: [{ productId: 'prod_123', quantity: 2, price: 99.99 }],
-      email: 'customer@example.com',
-      phone: '+52 55 1234 5678',
-      firstName: 'Juan',
-      lastName: 'Pérez',
-      address: 'Calle Principal 123',
-      city: 'Ciudad de México',
-      postalCode: '28001',
-      country: 'Mexico',
-    },
-  })
+  return NextResponse.json({ message: 'Use POST para crear una orden' })
 }
