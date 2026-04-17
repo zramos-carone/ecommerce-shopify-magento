@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Check, ShoppingCart } from 'lucide-react'
+import { Check, ShoppingCart, Package, Truck, Info } from 'lucide-react'
 import { MayoristaProduct } from '@/lib/types/mayorista'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -18,85 +18,91 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    // Call the external handler
     onAddToCart?.(product)
-    
-    // Provide visual feedback
     setIsAdded(true)
     setTimeout(() => setIsAdded(false), 2000)
   }
 
+  // Lógica de Ofuscación de Stock para el modelo Boutique
+  const getStockLabel = () => {
+    if (!product.inStock || product.stock <= 0) {
+      return { text: 'Agotado', color: 'bg-red-50 text-red-600 border-red-100', dot: 'bg-red-600' }
+    }
+    if (product.stock <= 10) {
+      return { text: 'Últimas unidades', color: 'bg-yellow-50 text-yellow-700 border-yellow-100', dot: 'bg-yellow-500' }
+    }
+    return { text: 'En Stock - Entrega Inmediata', color: 'bg-green-50 text-green-700 border-green-100', dot: 'bg-green-600' }
+  }
+
+  const stockInfo = getStockLabel()
+
   return (
-    <div className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-shadow duration-200">
+    <div className="group relative overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
       <Link href={`/catalog/${product.id}`} className="block">
+        
         {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden bg-gray-100">
+        <div className="relative aspect-square overflow-hidden bg-gray-50 m-2 rounded-[2rem]">
           <Image
-            src={
-              product.imageUrl || 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800'
-            }
+            src={product.imageUrl}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            priority={false}
           />
 
-          {/* Stock Badge */}
-          {!product.inStock && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <span className="text-white font-semibold">Sin Stock</span>
-            </div>
-          )}
-
-          {/* Mayorista Badge */}
-          <div className="absolute top-2 right-2 bg-blue-600/90 backdrop-blur-sm text-white px-2 py-1 rounded text-[10px] font-black uppercase tracking-tighter">
-            {product.mayorista}
+          {/* Premium Availability Badge */}
+          <div className={`absolute top-4 left-4 flex items-center space-x-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-sm ${stockInfo.color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${stockInfo.dot} ${product.stock > 0 ? 'animate-pulse' : ''}`}></span>
+            <span className="text-[10px] font-black uppercase tracking-widest">{stockInfo.text}</span>
+          </div>
+          
+          {/* Logo MaxTech discreto */}
+          <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] text-white border border-white/20">
+            MaxTech Elite
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest font-outfit">
-            {product.brand || 'Generic'}
-          </p>
+        {/* Content Area */}
+        <div className="p-6 pt-2">
+          <div className="flex items-center space-x-2 mb-2">
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{product.brand || 'Original'}</span>
+          </div>
 
-          <h3 className="mt-2 text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors font-outfit leading-tight h-10">
+          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 h-10 group-hover:text-blue-600 transition-colors font-outfit leading-tight mb-4">
             {product.name}
           </h3>
 
-          {product.rating && (
-            <div className="mt-2 flex items-center gap-1">
-              <div className="flex text-yellow-400 text-xs">
-                {'★'.repeat(Math.floor(product.rating))}
-                {'☆'.repeat(5 - Math.floor(product.rating))}
-              </div>
-              <span className="text-[10px] text-gray-500 font-medium">({product.rating.toFixed(1)})</span>
-            </div>
-          )}
-
-          <div className="mt-4 flex items-end justify-between">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-none mb-1">Precio Final</span>
-              <span className="text-xl font-black text-gray-900 font-outfit leading-none">
-                ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
+          <div className="flex flex-col mb-6">
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter leading-none mb-2 underline decoration-blue-200 decoration-2 underline-offset-4">Precio Total</span>
+            <span className="text-2xl font-black text-gray-900 font-outfit tracking-tighter leading-none">
+              ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              <span className="text-xs text-gray-400 ml-1 font-medium font-sans underline-none">MXN</span>
+            </span>
+          </div>
+          
+          <div className="flex items-center space-x-4 mb-6 pt-4 border-t border-gray-50">
+             <div className="flex items-center space-x-1 text-gray-400">
+               <Truck className="w-3.5 h-3.5" />
+               <span className="text-[9px] font-bold uppercase">Envío Gratis</span>
+             </div>
+             <div className="flex items-center space-x-1 text-gray-400">
+               <Info className="w-3.5 h-3.5" />
+               <span className="text-[9px] font-bold uppercase">Garantía Local</span>
+             </div>
           </div>
         </div>
       </Link>
 
-      <div className="px-4 pb-4">
+      <div className="px-6 pb-6">
         <button
           onClick={handleAddToCart}
           disabled={!product.inStock || isAdded}
-          className={`w-full py-2.5 px-3 rounded-lg font-bold text-xs uppercase tracking-widest transition-all relative overflow-hidden flex items-center justify-center space-x-2 ${
+          className={`group/btn w-full py-4 px-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all relative overflow-hidden flex items-center justify-center space-x-2 shadow-lg ${
             product.inStock 
               ? isAdded
-                ? 'bg-green-600 text-white' 
-                : 'bg-gray-900 text-white hover:bg-blue-600 active:scale-95 shadow-sm' 
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-green-600 text-white shadow-green-500/20' 
+                : 'bg-black text-white hover:bg-blue-600 active:scale-95 shadow-black/10' 
+              : 'bg-gray-50 text-gray-300 cursor-not-allowed shadow-none'
           }`}
         >
           <AnimatePresence mode="wait">
@@ -109,7 +115,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
                 className="flex items-center space-x-2"
               >
                 <Check className="w-4 h-4" />
-                <span>¡Añadido!</span>
+                <span>¡Agregado!</span>
               </motion.div>
             ) : (
               <motion.div
@@ -119,7 +125,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
                 exit={{ y: -20, opacity: 0 }}
                 className="flex items-center space-x-2"
               >
-                <ShoppingCart className="w-4 h-4" />
+                <ShoppingCart className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                 <span>Agregar al Carrito</span>
               </motion.div>
             )}

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { searchAllMayoristas } from '@/lib/services/mayoristas'
-import { SearchQuery, MayoristaProduct, SearchResult } from '@/lib/types/mayorista'
+import { MayoristaProduct, SearchResult } from '@/lib/types/mayorista'
 import { rateLimiter } from '@/lib/services/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * GET /api/mayoristas/search (BOUTIQUE EDITION)
+ * En este modelo, el catálogo público SOLO muestra productos que han sido
+ * "curados" por el administrador (están en la DB local y tienen imagen).
+ */
 export async function GET(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') || 'unknown'
@@ -20,86 +24,66 @@ export async function GET(request: NextRequest) {
     const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1
     const limit = searchParams.get('limit') ? Number(searchParams.get('limit')) : 12
 
-    const query: SearchQuery = {
-      q: q || undefined,
-      category: category || undefined,
-      brand: searchParams.get('brand') || undefined,
-      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
-      minStock: searchParams.get('minStock') ? Number(searchParams.get('minStock')) : undefined,
-      page,
-      limit,
+    // 1. Búsqueda exclusiva en Base de Datos Local
+    const skip = (page - 1) * limit;
+
+    const whereClause: any = {
+      // FILTRO DE CALIDAD: El producto DEBE tener imagen para ser visible
+      NOT: { image: null },
+      AND: []
+    };
+
+    if (q) {
+      whereClause.AND.push({
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { sku: { contains: q, mode: 'insensitive' } },
+          { brand: { contains: q, mode: 'insensitive' } },
+        ]
+      });
     }
 
-    // --- BÚSQUEDA HÍBRIDA MAXTECH ---
-    
-    // 1. Ejecutar búsquedas en paralelo (Local + Mayoristas)
-    const [localProductsRaw, mayoristaResults] = await Promise.all([
+    if (category) {
+      whereClause.AND.push({ category: { equals: category, mode: 'insensitive' } });
+    }
+
+    // 2. Ejecutar consulta
+    const [localProductsRaw, totalCount] = await Promise.all([
       prisma.product.findMany({
-        where: q || category ? {
-          OR: [
-            { name: { contains: q, mode: 'insensitive' } },
-            { sku: { contains: q, mode: 'insensitive' } },
-            category ? { category: { equals: category, mode: 'insensitive' } } : {},
-          ]
-        } : {},
-        take: 20 // Priorizamos los primeros 20 locales
+        where: whereClause,
+        orderBy: { updatedAt: 'desc' }, // Mostrar lo más reciente curado primero
+        skip,
+        take: limit
       }),
-      searchAllMayoristas(query)
+      prisma.product.count({ where: whereClause })
     ]);
 
-    // 2. Convertir productos locales al formato de catálogo
-    const localProducts: MayoristaProduct[] = localProductsRaw.map(p => ({
+    // 3. Convertir al formato de visualización (MayoristaProduct)
+    const products: MayoristaProduct[] = localProductsRaw.map(p => ({
       id: p.id,
       sku: p.sku,
       name: p.name,
       price: p.price,
-      imageUrl: p.image || '',
+      imageUrl: p.image || '', // Ya filtramos nulos, pero react lo necesita
       brand: p.brand || 'MaxTech',
       category: p.category || '',
       stock: p.stock,
       inStock: p.stock > 0,
-      mayorista: 'MAXTECH', // Identificador de inventario propio
+      mayorista: 'MAXTECH', // Ocultamos la procedencia real
       rating: 5.0,
       description: p.description || ''
     }));
 
-    // 3. Fusión y Deduplicación inteligente
-    // Unimos ambos resultados, colocando los locales primero
-    let combinedProducts = [...localProducts, ...mayoristaResults.products];
-    const seenSkus = new Set<string>();
-    const finalProducts: MayoristaProduct[] = [];
-
-    for (const product of combinedProducts) {
-      if (!seenSkus.has(product.sku)) {
-        seenSkus.add(product.sku);
-        
-        // Si el producto es de un mayorista pero lo tenemos en DB local (Override),
-        // aplicamos los datos locales pero mantenemos el badge de mayorista si queremos
-        const localVersion = localProducts.find(lp => lp.sku === product.sku);
-        if (localVersion && product.mayorista !== 'MAXTECH') {
-          finalProducts.push({
-            ...product,
-            imageUrl: localVersion.imageUrl || product.imageUrl,
-            name: localVersion.name || product.name,
-            price: localVersion.price || product.price, // Opcional: Priorizar precio local
-          });
-        } else {
-          finalProducts.push(product);
-        }
-      }
-    }
-
-    // 4. Resultado Final con Metadatos
     const result: SearchResult = {
-      ...mayoristaResults,
-      products: finalProducts,
-      total: Math.max(mayoristaResults.total, finalProducts.length),
+      products,
+      total: totalCount,
       page,
-      limit
+      limit,
+      hasMore: (skip + products.length) < totalCount,
+      timestamp: new Date().toISOString()
     };
 
-    console.log(`🔍 [HYBRID_SEARCH] Query: "${q}". Local: ${localProducts.length}, Ext: ${mayoristaResults.products.length}, Final: ${finalProducts.length}`);
+    console.log(`💎 [BOUTIQUE_SEARCH] Query: "${q}". Visibles: ${products.length}/${totalCount}`);
 
     return NextResponse.json(result, {
       status: 200,
@@ -108,7 +92,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[HYBRID_SEARCH_ERROR]', error)
-    return NextResponse.json({ error: 'Failed to search products' }, { status: 500 })
+    console.error('[BOUTIQUE_SEARCH_ERROR]', error)
+    return NextResponse.json({ error: 'Failed to search curated products' }, { status: 500 })
   }
 }
