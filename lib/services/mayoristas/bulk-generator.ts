@@ -13,6 +13,20 @@ const CATEGORIES = [
   'Motherboards',
 ]
 
+// Mapeo de imágenes locales y remotas de alta calidad
+const CATEGORY_IMAGES: Record<string, string> = {
+  Laptop: '/images/cat-laptop.png',
+  Desktop: '/images/cat-desktop.png',
+  GPU: '/images/cat-gpu.png',
+  Monitor: '/images/cat-monitor.png',
+  Procesadores: '/images/cat-processor.png',
+  Memory: '/images/cat-ram.png',
+  // Fallbacks de Unsplash (Alta Resolución) para las categorías sin imagen local
+  Storage: 'https://images.unsplash.com/photo-1597733336794-12d05021d510?q=80&w=800&auto=format&fit=crop', // SSD
+  Motherboards: 'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop', // Circuit board
+  Accesorios: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=800&auto=format&fit=crop', // Peripherals
+}
+
 const BRANDS_BY_CATEGORY: Record<string, string[]> = {
   Laptop: ['Dell', 'Lenovo', 'Apple', 'HP', 'ASUS', 'Acer', 'MSI'],
   Desktop: ['Dell', 'HP', 'Lenovo', 'ASUS', 'Corsair'],
@@ -124,6 +138,7 @@ function generateProduct(
     category,
     brand,
     rating: Math.round(rating * 10) / 10,
+    imageUrl: CATEGORY_IMAGES[category] || 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800',
     mayorista,
     mayoristSku: `${mayorista.toUpperCase()}-${sku}`,
     mayoristPrice,

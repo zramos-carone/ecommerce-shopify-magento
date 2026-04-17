@@ -13,7 +13,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
       <div className="relative aspect-square overflow-hidden bg-gray-100">
         <Image
           src={
-            product.imageUrl || 'https://via.placeholder.com/300?text=' + encodeURIComponent(product.name)
+            product.imageUrl || 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=800'
           }
           alt={product.name}
           fill
