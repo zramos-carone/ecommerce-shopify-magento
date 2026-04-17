@@ -1,21 +1,21 @@
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
-  CheckCircle2, 
+  Check, 
   ArrowRight, 
   ShoppingBag, 
   Mail, 
   Package, 
   Instagram,
-  Twitter,
-  Linkedin
+  Linkedin,
+  Facebook
 } from 'lucide-react'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('orderNumber') || 'MA-TX-999331'
 
@@ -30,7 +30,7 @@ export default function SuccessPage() {
           transition={{ type: 'spring', damping: 15, stiffness: 200 }}
           className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto mb-10 text-green-600 border border-green-100 shadow-xl shadow-green-500/10"
         >
-          <CheckCircle2 className="w-12 h-12" />
+          <Check className="w-12 h-12" />
         </motion.div>
 
         {/* Text Header */}
@@ -118,12 +118,24 @@ export default function SuccessPage() {
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">Preséntanos tu nuevo Setup</p>
           <div className="flex justify-center space-x-8 text-gray-300">
             <a href="#" className="hover:text-blue-600 transition-colors"><Instagram className="w-6 h-6" /></a>
-            <a href="#" className="hover:text-blue-600 transition-colors"><Twitter className="w-6 h-6" /></a>
+            <a href="#" className="hover:text-blue-600 transition-colors"><Facebook className="w-6 h-6" /></a>
             <a href="#" className="hover:text-blue-600 transition-colors"><Linkedin className="w-6 h-6" /></a>
           </div>
         </motion.div>
 
       </div>
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }
