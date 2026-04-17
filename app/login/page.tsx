@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Zap, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Zap, Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const result = await signIn('credentials', {
+      const result = await signIn("credentials", {
         redirect: false,
         email,
         password,
@@ -28,10 +28,10 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Credenciales inválidas. Verifica tu email y contraseña.");
       } else {
-        router.push('/admin');
+        router.push("/admin");
         router.refresh();
       }
-    } catch (err) {
+    } catch {
       setError("Ocurrió un error inesperado. Inténtalo de nuevo.");
     } finally {
       setIsLoading(false);
@@ -44,10 +44,10 @@ export default function LoginPage() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "outfit" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
         {/* Branding */}
@@ -58,15 +58,16 @@ export default function LoginPage() {
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter font-outfit">
             MAX<span className="text-blue-500">CORP</span>
           </h1>
-          <p className="text-gray-500 text-xs font-black uppercase tracking-[0.3em] mt-2">Acceso al Command Center</p>
+          <p className="text-gray-500 text-xs font-black uppercase tracking-[0.3em] mt-2">
+            Acceso al Command Center
+          </p>
         </div>
 
         {/* Login Card */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center space-x-3 text-red-400 text-sm font-medium"
@@ -77,10 +78,12 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-4">Email Corporativo</label>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-4">
+                Email Corporativo
+              </label>
               <div className="relative group">
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors" />
-                <input 
+                <input
                   type="email"
                   required
                   value={email}
@@ -93,12 +96,19 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between px-4">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Contraseña</label>
-                <button type="button" className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline">Olvide mi acceso</button>
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  Contraseña
+                </label>
+                <button
+                  type="button"
+                  className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline"
+                >
+                  Olvide mi acceso
+                </button>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 group-focus-within:text-blue-500 transition-colors" />
-                <input 
+                <input
                   type="password"
                   required
                   value={password}
@@ -109,7 +119,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button 
+            <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center space-x-3 active:scale-[0.98]"
@@ -123,7 +133,6 @@ export default function LoginPage() {
                 </>
               )}
             </button>
-
           </form>
         </div>
 

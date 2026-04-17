@@ -1,30 +1,23 @@
-'use client'
+"use client";
 
-import React, { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { 
-  Check, 
-  ArrowRight, 
-  ShoppingBag, 
-  Mail, 
-  Package
-} from 'lucide-react'
+import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Check, ArrowRight, ShoppingBag, Mail } from "lucide-react";
 
 function SuccessContent() {
-  const searchParams = useSearchParams()
-  const orderNumber = searchParams.get('orderNumber') || 'MA-TX-999331'
+  const searchParams = useSearchParams();
+  const orderNumber = searchParams.get("orderNumber") || "MA-TX-999331";
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center py-20 px-4">
       <div className="max-w-3xl w-full text-center">
-        
         {/* Animated Success Icon */}
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', damping: 15, stiffness: 200 }}
+          transition={{ type: "spring", damping: 15, stiffness: 200 }}
           className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto mb-10 text-green-600 border border-green-100 shadow-xl shadow-green-500/10"
         >
           <Check size={48} />
@@ -43,7 +36,8 @@ function SuccessContent() {
             ¡GRACIAS POR TU COMPRA!
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 leading-relaxed">
-            Tu pedido está siendo procesado por nuestros expertos. Recibirás un correo de confirmación en unos minutos.
+            Tu pedido está siendo procesado por nuestros expertos. Recibirás un
+            correo de confirmación en unos minutos.
           </p>
         </motion.div>
 
@@ -51,20 +45,30 @@ function SuccessContent() {
         <div className="bg-gray-50 rounded-[2.5rem] p-10 mb-12 border border-gray-100 relative overflow-hidden">
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
             <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Número de Orden</p>
-              <p className="text-xl font-black font-outfit text-blue-600 tracking-tight">{orderNumber}</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                Número de Orden
+              </p>
+              <p className="text-xl font-black font-outfit text-blue-600 tracking-tight">
+                {orderNumber}
+              </p>
             </div>
             <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Estado del Envío</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                Estado del Envío
+              </p>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                <p className="text-sm font-bold text-gray-900">En Preparación</p>
+                <p className="text-sm font-bold text-gray-900">
+                  En Preparación
+                </p>
               </div>
             </div>
             <div className="md:col-span-2 pt-6 border-t border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center space-x-3 text-gray-600">
                 <Mail size={18} />
-                <span className="text-sm font-medium">Sigue tu pedido en tu correo</span>
+                <span className="text-sm font-medium">
+                  Sigue tu pedido en tu correo
+                </span>
               </div>
               <button className="text-xs font-black uppercase tracking-widest text-blue-600 hover:text-black transition-colors">
                 Descargar Ticket PDF
@@ -90,20 +94,21 @@ function SuccessContent() {
             <span>Ver Mis Órdenes</span>
           </Link>
         </div>
-
       </div>
     </div>
-  )
+  );
 }
 
 export default function SuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+        </div>
+      }
+    >
       <SuccessContent />
     </Suspense>
-  )
+  );
 }
