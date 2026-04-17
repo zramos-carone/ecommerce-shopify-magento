@@ -4,9 +4,9 @@ node_modules/
 pnpm-lock.yaml
 
 # Development
-.env.local
+.env*
+!.env.example
 .env.local.backup
-.env.*.local
 .vscode/
 .idea/
 *.swp
@@ -40,7 +40,6 @@ coverage/
 # Deployment
 .vercel
 .vercel/
-.env.production.local
 
 # Build artifacts
 lint_results.txt
