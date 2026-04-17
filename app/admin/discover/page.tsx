@@ -97,8 +97,9 @@ export default function DiscoveryHub() {
             <p className="text-xs font-medium mt-1">1. Importar &rarr; 2. <a href="/admin/inventory" className="underline font-bold">Añadir tu foto en el Inventario</a> &rarr; 3. El producto aparece en la Tienda</p>
           </div>
         </div>
+      </div>
 
-      {/* Search Bar Bar */}
+      {/* Search Bar */}
       <div className="sticky top-2 z-20">
         <form onSubmit={handleSearch} className="relative group">
           <div className="absolute inset-x-0 -bottom-2 bg-blue-600/10 blur-xl h-20 rounded-[3rem] group-focus-within:bg-blue-600/20 transition-all opacity-0 group-focus-within:opacity-100"></div>
