@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import Link from "next/link";
+import { BRAND_CONFIG } from "@/lib/config/branding";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -144,7 +145,8 @@ export default function CheckoutPage() {
                       Información de Envío
                     </h2>
                     <p className="text-gray-400 text-sm">
-                      ¿A dónde enviamos tu equipo MaxTech?
+                      ¿A dónde enviamos tu equipo {BRAND_CONFIG.shortName}
+                      {BRAND_CONFIG.accentName}?
                     </p>
                   </div>
                 </div>
@@ -313,9 +315,11 @@ export default function CheckoutPage() {
                 <div className="mt-12 bg-gray-50 rounded-3xl p-6 flex items-start space-x-4">
                   <ShieldCheck className="w-6 h-6 text-green-600 shrink-0" />
                   <p className="text-[11px] text-gray-500 font-medium leading-relaxed">
-                    Tu pago será procesado de forma segura. MaxTech no almacena
-                    los datos de tu tarjeta. Al confirmar, aceptas nuestros
-                    términos de servicio y políticas de privacidad.
+                    Tu pago será procesado de forma segura.{" "}
+                    {BRAND_CONFIG.shortName}
+                    {BRAND_CONFIG.accentName} no almacena los datos de tu
+                    tarjeta. Al confirmar, aceptas nuestros términos de servicio
+                    y políticas de privacidad.
                   </p>
                 </div>
               </section>
