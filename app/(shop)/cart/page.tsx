@@ -12,7 +12,7 @@ export default function CartPage() {
   const { cart, totalItems, totalPrice, removeFromCart, updateQuantity, clearCart } = useCart()
 
   const handleCheckout = async () => {
-    if (cart.length === 0) return
+    if (!cart || cart.length === 0) return
 
     // Store cart total in sessionStorage for checkout page
     sessionStorage.setItem(

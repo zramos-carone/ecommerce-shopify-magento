@@ -15,12 +15,12 @@ export function useCart() {
   } = useCartContext()
 
   return {
-    cart: items,
+    cart: items || [],
     addToCart: (product: MayoristaProduct, quantity?: number) => addItem(product, quantity),
     removeFromCart: (productId: string) => removeItem(productId),
     updateQuantity,
     clearCart,
-    totalItems,
-    totalPrice
+    totalItems: totalItems || 0,
+    totalPrice: totalPrice || 0
   }
 }
