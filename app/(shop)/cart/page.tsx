@@ -54,7 +54,7 @@ export default function CartPage() {
             </p>
           </div>
           
-          {cart.length > 0 && (
+          {cart && cart.length > 0 && (
             <button
               onClick={clearCart}
               className="flex items-center space-x-2 text-xs font-black text-red-500 hover:text-red-700 uppercase tracking-widest transition-colors mb-2"
@@ -70,7 +70,7 @@ export default function CartPage() {
           {/* Items Column */}
           <div className="lg:col-span-8">
             <AnimatePresence mode="popLayout">
-              {cart.length === 0 ? (
+              {!cart || cart.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -88,7 +88,7 @@ export default function CartPage() {
                     className="inline-flex items-center space-x-3 bg-blue-600 text-white px-8 py-4 rounded-2xl hover:bg-black transition-all font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 active:scale-95"
                   >
                     <span>Explorar Catálogo</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowLeft className="w-4 h-4" />
                   </Link>
                 </motion.div>
               ) : (
