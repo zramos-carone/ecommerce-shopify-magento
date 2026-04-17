@@ -29,7 +29,8 @@ export default function DiscoveryHub() {
     
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/mayoristas/search?q=${encodeURIComponent(searchTerm)}&limit=20`);
+      // IMPORTANTE: Consultamos directamente a los mayoristas, no al catálogo curado
+      const response = await fetch(`/api/mayoristas/raw?q=${encodeURIComponent(searchTerm)}&limit=20`);
       const data = await response.json();
       setResults(data.products || []);
     } catch (error) {
@@ -51,9 +52,12 @@ export default function DiscoveryHub() {
           price: product.price,
           stock: product.stock,
           category: product.category,
-          image: product.imageUrl,
+          image: null, // ❌ NO guardamos la foto genérica del mayorista
           brand: product.brand,
-          description: `Importado de ${product.mayorista}`
+          description: `Producto pendiente de curación. Costo mayorista: $${product.price}`,
+          mayoristId: product.mayorista,
+          mayoristSku: product.sku,
+          mayoristPrice: product.price
         }),
       });
 
@@ -82,10 +86,17 @@ export default function DiscoveryHub() {
             HUB DE <span className="text-blue-600">DESCUBRIMIENTO</span>
           </h1>
           <p className="text-gray-400 font-medium mt-2 max-w-2xl">
-            Explora millones de productos en stock real. Selecciona los que quieras para tu catálogo local y personalízalos.
+            Busca productos en stock real. Impórtalos y úete al <a href="/admin/inventory" className="text-blue-600 font-bold underline">Inventario</a> para agregar tu foto personalizada y publicarlos.
           </p>
         </div>
-      </div>
+        {/* Banner de flujo */}
+        <div className="flex items-center space-x-4 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 text-amber-800">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest">Flujo de Curación</p>
+            <p className="text-xs font-medium mt-1">1. Importar &rarr; 2. <a href="/admin/inventory" className="underline font-bold">Añadir tu foto en el Inventario</a> &rarr; 3. El producto aparece en la Tienda</p>
+          </div>
+        </div>
 
       {/* Search Bar Bar */}
       <div className="sticky top-2 z-20">
@@ -151,9 +162,9 @@ export default function DiscoveryHub() {
 
               <div className="mt-8">
                 {importedSkus.has(product.sku) ? (
-                   <div className="w-full py-4 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center space-x-2 border border-green-100 animate-pulse">
+                   <div className="w-full py-4 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center space-x-2 border border-amber-100">
                       <Check className="w-4 h-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">En tu Tienda</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Importado — Añade tu Foto</span>
                    </div>
                 ) : (
                   <button 

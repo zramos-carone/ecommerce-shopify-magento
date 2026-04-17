@@ -141,7 +141,19 @@ export async function PATCH(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { sku, name, price, stock, category, image, brand, description } = body;
+    const { 
+      sku, 
+      name, 
+      price, 
+      stock, 
+      category, 
+      image, 
+      brand, 
+      description,
+      mayoristId,
+      mayoristSku,
+      mayoristPrice
+    } = body;
 
     if (!sku || !name) {
       return NextResponse.json({ error: 'SKU y Nombre son obligatorios' }, { status: 400 });
@@ -157,7 +169,10 @@ export async function POST(req: Request) {
         category,
         image,
         brand,
-        description
+        description,
+        mayoristId,
+        mayoristSku,
+        mayoristPrice: mayoristPrice ? Number(mayoristPrice) : undefined
       },
       create: {
         sku,
@@ -167,7 +182,10 @@ export async function POST(req: Request) {
         category,
         image,
         brand,
-        description
+        description,
+        mayoristId,
+        mayoristSku,
+        mayoristPrice: mayoristPrice ? Number(mayoristPrice) : undefined
       }
     });
 

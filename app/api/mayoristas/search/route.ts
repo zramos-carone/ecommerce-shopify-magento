@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { searchAllMayoristas } from '@/lib/services/mayoristas'
 import { MayoristaProduct, SearchResult } from '@/lib/types/mayorista'
 import { rateLimiter } from '@/lib/services/rateLimit'
 
@@ -51,28 +52,50 @@ export async function GET(request: NextRequest) {
     const [localProductsRaw, totalCount] = await Promise.all([
       prisma.product.findMany({
         where: whereClause,
-        orderBy: { updatedAt: 'desc' }, // Mostrar lo más reciente curado primero
+        orderBy: { updatedAt: 'desc' },
         skip,
         take: limit
       }),
       prisma.product.count({ where: whereClause })
     ]);
 
-    // 3. Convertir al formato de visualización (MayoristaProduct)
-    const products: MayoristaProduct[] = localProductsRaw.map(p => ({
-      id: p.id,
-      sku: p.sku,
-      name: p.name,
-      price: p.price,
-      imageUrl: p.image || '', // Ya filtramos nulos, pero react lo necesita
-      brand: p.brand || 'MaxTech',
-      category: p.category || '',
-      stock: p.stock,
-      inStock: p.stock > 0,
-      mayorista: 'MAXTECH', // Ocultamos la procedencia real
-      rating: 5.0,
-      description: p.description || ''
+    // --- ORÁCULO DE STOCK EN TIEMPO REAL ---
+    // Consultamos a los mayoristas para obtener el stock "fresco" antes de mostrar
+    const products: MayoristaProduct[] = await Promise.all(localProductsRaw.map(async (p) => {
+      let currentStock = p.stock;
+      
+      // Si tiene vínculo con mayorista, validamos disponibilidad real
+      if (p.mayoristSku && p.mayoristId) {
+        try {
+          // Buscamos en los servicios de mayoristas (Ingram, Synnex, etc)
+          const allExternal = await searchAllMayoristas({ q: p.mayoristSku });
+          const externalMatch = allExternal.products.find(ep => ep.sku === p.sku || ep.sku === p.mayoristSku);
+          
+          if (externalMatch) {
+            currentStock = externalMatch.stock;
+            // Opcional: Podríamos actualizar la DB local aquí para que el admin lo vea
+          }
+        } catch (err) {
+          console.warn(`⚠️ [STOCK_SYNC_FAILED] SKU: ${p.sku}. Usando stock local.`);
+        }
+      }
+
+      return {
+        id: p.id,
+        sku: p.sku,
+        name: p.name,
+        price: p.price,
+        imageUrl: p.image || '',
+        brand: p.brand || 'MaxTech',
+        category: p.category || '',
+        stock: currentStock,
+        inStock: currentStock > 0,
+        mayorista: 'MAXTECH',
+        rating: 5.0,
+        description: p.description || ''
+      };
     }));
+    // ----------------------------------------
 
     const result: SearchResult = {
       products,
