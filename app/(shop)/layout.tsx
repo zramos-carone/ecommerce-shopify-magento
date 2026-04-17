@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ShoppingBag, Search, User } from 'lucide-react';
+import { Header } from '@/components/Header';
 
 export default function ShopLayout({
   children,
@@ -8,41 +8,8 @@ export default function ShopLayout({
 }) {
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
-      {/* Navigation - Glassmorphism Sticky */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center space-x-2">
-                <span className="text-3xl font-black tracking-tighter text-blue-600 font-outfit uppercase">
-                  MAX<span className="text-gray-900">TECH</span>
-                </span>
-              </Link>
-            </div>
-
-            {/* Links Centrales */}
-            <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-600">
-              <Link href="/catalog" className="hover:text-blue-600 transition-colors">Productos</Link>
-              <Link href="/catalog?category=laptops" className="hover:text-blue-600 transition-colors">Laptops</Link>
-              <Link href="/catalog?category=gaming" className="hover:text-blue-600 transition-colors">Gaming</Link>
-              <Link href="/api-docs" className="hover:text-blue-600 transition-colors">API Docs</Link>
-            </div>
-
-            <div className="flex items-center space-x-5">
-              <button className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-                <Search className="w-5 h-5" />
-              </button>
-              <Link href="/cart" className="p-2 text-gray-400 hover:text-gray-900 transition-colors relative">
-                <ShoppingBag className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-blue-600 rounded-full border-2 border-white"></span>
-              </Link>
-              <Link href="/admin" className="p-2 text-gray-400 hover:text-gray-900 transition-colors">
-                <User className="w-5 h-5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Header Centralizado - Client Component */}
+      <Header />
 
       {/* Main content */}
       <main className="flex-grow">
