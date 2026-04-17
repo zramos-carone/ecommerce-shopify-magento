@@ -16,7 +16,7 @@ import Link from 'next/link'
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { cart, totalPrice, totalItems, clearCart } = useCart()
+  const { cart, totalPrice, clearCart } = useCart()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [step, setStep] = useState(1)
 
