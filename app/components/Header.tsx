@@ -64,7 +64,14 @@ export function Header() {
             </button>
             
             <Link href="/cart" className="p-2 text-gray-400 hover:text-gray-900 transition-all relative group">
-              <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <motion.div
+                key={totalItems}
+                initial={{ scale: 1 }}
+                animate={{ scale: totalItems > 0 ? [1, 1.2, 1] : 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </motion.div>
               <AnimatePresence>
                 {totalItems > 0 && (
                   <motion.span 
