@@ -1,15 +1,16 @@
-import { prisma } from '@/lib/db';
-import OrderTable from './components/OrderTable';
+import { prisma } from "@/lib/db";
+import OrderTable from "./components/OrderTable";
+import { BRAND_CONFIG } from "@/lib/config/branding";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
   // Fetch orders from database with items included
   const orders = await prisma.order.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     include: {
-      items: true
-    }
+      items: true,
+    },
   });
 
   return (
@@ -18,12 +19,17 @@ export default async function AdminOrdersPage() {
         <div>
           <div className="flex items-center space-x-3 mb-4">
             <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">Logística MaxTech</span>
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">
+              {BRAND_CONFIG.shortName}
+              {BRAND_CONFIG.accentName} Logistics
+            </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 font-outfit uppercase tracking-tighter leading-none">
             GESTIÓN DE <span className="text-blue-600">ÓRDENES</span>
           </h1>
-          <p className="text-gray-400 font-medium mt-2">Supervisa, actualiza y despacha los pedidos de tus clientes.</p>
+          <p className="text-gray-400 font-medium mt-2">
+            Supervisa, actualiza y despacha los pedidos de tus clientes.
+          </p>
         </div>
       </div>
 

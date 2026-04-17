@@ -11,6 +11,7 @@ import {
   AlertCircle,
   X,
 } from "lucide-react";
+import { BRAND_CONFIG } from "@/lib/config/branding";
 import { motion, AnimatePresence } from "framer-motion";
 
 type MayoristaProduct = {
@@ -91,9 +92,9 @@ export default function DiscoveryHub() {
       <div className="flex flex-col md:flex-row md:items-end justify-between items-start gap-6">
         <div>
           <div className="flex items-center space-x-3 mb-4">
-            <span className="w-2 h-2 bg-blue-600 rounded-full animate-ping"></span>
+            <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
             <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em]">
-              Red Global de Mayoristas
+              Integración {BRAND_CONFIG.shortName} {BRAND_CONFIG.accentName} Hub
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 font-outfit uppercase tracking-tighter leading-none">

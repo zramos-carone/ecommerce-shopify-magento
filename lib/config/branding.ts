@@ -7,16 +7,16 @@
 
 export const BRAND_CONFIG = {
   // Nombres
-  shortName: "TECNO", // Ej: TECNO
-  accentName: "CORP", // Ej: CORP (usado en logos de dos partes)
-  fullName: "Tecno Corp", // Nombre legal o completo
+  shortName: "TEC", // Parte en Azul (Igual que MAX)
+  accentName: "NO", // Parte en Gris (Igual que TECH)
+  fullName: "Tecno",
 
   // Slogans y Textos
   slogan: "Tu Socio Tecnológico",
   adminPanelName: "Command Center",
 
-  // Identidad de Marketplace (El nombre que aparece en los productos)
-  identityName: "TECNO", // Antes era "MAXTECH"
+  // Identidad de Marketplace (Unificada para la API)
+  identityName: "TECNO",
 
   // SEO
   metaTitle: "Tecno - Boutique de Tecnología Curada",
