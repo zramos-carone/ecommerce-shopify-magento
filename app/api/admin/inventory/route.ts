@@ -133,3 +133,55 @@ export async function PATCH(req: Request) {
     );
   }
 }
+
+/**
+ * POST /api/admin/inventory
+ * Crear o Importar un nuevo producto
+ */
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { sku, name, price, stock, category, image, brand, description } = body;
+
+    if (!sku || !name) {
+      return NextResponse.json({ error: 'SKU y Nombre son obligatorios' }, { status: 400 });
+    }
+
+    // Upsert para evitar duplicados si ya existe el SKU
+    const product = await prisma.product.upsert({
+      where: { sku },
+      update: {
+        name,
+        price: Number(price),
+        stock: Number(stock),
+        category,
+        image,
+        brand,
+        description
+      },
+      create: {
+        sku,
+        name,
+        price: Number(price),
+        stock: Number(stock),
+        category,
+        image,
+        brand,
+        description
+      }
+    });
+
+    console.log(`✨ [PRODUCT_IMPORT] Producto ${sku} importado/actualizado correctamente.`);
+
+    return NextResponse.json({
+      success: true,
+      data: product
+    });
+  } catch (error) {
+    console.error('❌ Inventory create error:', error);
+    return NextResponse.json(
+      { error: 'Error al importar producto al inventario' },
+      { status: 500 }
+    );
+  }
+}
