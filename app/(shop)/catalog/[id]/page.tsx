@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { MayoristaProduct, SearchResult } from '@/lib/types/mayorista'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { 
   ShoppingCart, 
   ArrowLeft, 
