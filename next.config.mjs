@@ -14,7 +14,7 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   },
   images: {
-    domains: ['via.placeholder.com'],
+    domains: ['via.placeholder.com', 'images.unsplash.com'],
   },
   headers: async () => {
     return [
