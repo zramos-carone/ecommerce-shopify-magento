@@ -38,7 +38,7 @@
         "./lib/types/*"
       ],
       "@/hooks/*": [
-        "./app/hooks/*"
+        "./hooks/*"
       ]
     },
     "allowJs": true,
