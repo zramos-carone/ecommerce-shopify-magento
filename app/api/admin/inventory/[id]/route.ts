@@ -2,94 +2,90 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
 /**
- * GET /api/admin/inventory/[id]
- * Obtener detalles de producto específico
- */
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const product = await prisma.product.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: product,
-    });
-  } catch (error) {
-    console.error('❌ Product fetch error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch product' },
-      { status: 500 }
-    );
-  }
-}
-
-/**
  * PATCH /api/admin/inventory/[id]
- * Actualizar un producto específico
- *
- * Body: { stock?, price?, name? }
+ * Actualiza un producto específico (Nombre, precio, stock, imagen, etc.)
  */
 export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const updateData = await req.json();
-    const { stock, price, name } = updateData;
+    const id = params.id;
+    const body = await req.json();
 
-    // Validar datos
-    if (stock !== undefined && (typeof stock !== 'number' || stock < 0)) {
-      return NextResponse.json(
-        { error: 'Invalid stock value' },
-        { status: 400 }
-      );
-    }
+    const {
+      name,
+      price,
+      stock,
+      image,
+      category,
+      sku
+    } = body;
 
-    if (price !== undefined && (typeof price !== 'number' || price < 0)) {
-      return NextResponse.json(
-        { error: 'Invalid price value' },
-        { status: 400 }
-      );
-    }
-
-    // Build update object
-    const dataToUpdate: any = {};
-    if (stock !== undefined) dataToUpdate.stock = Math.max(0, stock);
-    if (price !== undefined) dataToUpdate.price = price;
-    if (name !== undefined) dataToUpdate.name = name;
-
-    const updated = await prisma.product.update({
-      where: { id: params.id },
-      data: dataToUpdate,
+    // Validate product existence
+    const existingProduct = await prisma.product.findUnique({
+      where: { id }
     });
 
-    console.log(`✅ Product updated: ${updated.name}`);
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+    }
+
+    // Update product
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        name: name !== undefined ? name : undefined,
+        price: price !== undefined ? Number(price) : undefined,
+        stock: stock !== undefined ? Number(stock) : undefined,
+        image: image !== undefined ? image : undefined,
+        category: category !== undefined ? category : undefined,
+        sku: sku !== undefined ? sku : undefined,
+      }
+    });
+
+    console.log(`✅ [PRODUCT_UPDATE] Producto ${id} actualizado:`, { 
+      name: updatedProduct.name,
+      price: updatedProduct.price,
+      stock: updatedProduct.stock
+    });
 
     return NextResponse.json({
       success: true,
-      data: updated,
+      data: updatedProduct
     });
+
   } catch (error) {
-    console.error('❌ Product update error:', error);
-    if ((error as any).code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      );
-    }
+    console.error('❌ [PRODUCT_UPDATE_ERROR]:', error);
     return NextResponse.json(
-      { error: 'Failed to update product' },
+      { error: error instanceof Error ? error.message : 'Error al actualizar el producto' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/admin/inventory/[id]
+ * Elimina un producto.
+ */
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = params.id;
+    
+    await prisma.product.delete({
+      where: { id }
+    });
+
+    console.log(`🗑️ [PRODUCT_DELETE] Producto ${id} eliminado.`);
+
+    return NextResponse.json({ success: true, message: 'Producto eliminado correctamente' });
+  } catch (error) {
+    console.error('❌ [PRODUCT_DELETE_ERROR]:', error);
+    return NextResponse.json(
+      { error: 'Error al eliminar el producto' },
       { status: 500 }
     );
   }
