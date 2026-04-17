@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
               console.log(`✨ [SYNC] Aplicando personalización local para SKU: ${product.sku}`);
               return {
                 ...product,
-                image: override.image || product.image,
+                imageUrl: override.image || product.imageUrl,
                 name: override.name || product.name,
                 // Puedes decidir si también quieres sobreponer precio y stock
                 // price: override.price || product.price,
