@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 }
 
 import { CartProvider } from '@/context/CartContext'
+import NextAuthProvider from '@/app/components/NextAuthProvider'
 
 export default function RootLayout({
   children,
@@ -26,9 +27,11 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.variable} ${outfit.variable} font-inter antialiased`}>
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <NextAuthProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </NextAuthProvider>
       </body>
     </html>
   )
