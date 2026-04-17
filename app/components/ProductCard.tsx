@@ -42,13 +42,23 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
         
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-gray-50 m-2 rounded-[2rem]">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          />
+          {product.imageUrl ? (
+            <Image
+              src={product.imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-110 transition-transform duration-700"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+          ) : (
+            /* Placeholder elegante cuando no hay imagen aprobada */
+            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+              <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-3">
+                <Package className="w-8 h-8 text-gray-300" />
+              </div>
+              <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">Imagen próximamente</span>
+            </div>
+          )}
 
           {/* Premium Availability Badge */}
           <div className={`absolute top-4 left-4 flex items-center space-x-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-sm ${stockInfo.color}`}>
@@ -57,7 +67,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
           </div>
           
           {/* Logo MaxTech discreto */}
-          <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] text-white border border-white/20">
+          <div className="absolute top-4 right-4 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] text-white border border-white/10">
             MaxTech Elite
           </div>
         </div>
