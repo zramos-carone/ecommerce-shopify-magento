@@ -18,7 +18,6 @@ export default function CheckoutPage() {
   const router = useRouter()
   const { cart, totalPrice, clearCart } = useCart()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [step, setStep] = useState(1)
 
   const [formData, setFormData] = useState({
     email: '',
