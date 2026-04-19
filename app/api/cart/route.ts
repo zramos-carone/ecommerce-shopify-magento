@@ -2,11 +2,58 @@ import { NextResponse } from "next/server";
 import type { CartItem } from "@/hooks/useCart";
 
 /**
- * GET /api/cart
- * Retrieve cart data from the request (client-sent via body)
- *
- * @param {Request} req - Express-like request with cart items in JSON body
- * @returns {Response} Cart summary with total and item count
+ * @swagger
+ * /api/cart:
+ *   get:
+ *     summary: Resumen del Carrito
+ *     description: Calcula totales, impuestos y cargos finales basados en una lista de items serializada en la URL.
+ *     tags:
+ *       - Transacción
+ *     parameters:
+ *       - in: query
+ *         name: cart
+ *         schema:
+ *           type: string
+ *         description: JSON serializado del array de items del carrito.
+ *     responses:
+ *       200:
+ *         description: Resumen calculado del carrito.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 items: { type: 'array', items: { $ref: '#/components/schemas/CartItem' } }
+ *                 total: { type: 'number' }
+ *                 itemCount: { type: 'integer' }
+ *                 tax: { type: 'number' }
+ *                 grandTotal: { type: 'number' }
+ *   post:
+ *     summary: Proceso Inicial de Carrito
+ *     description: Valida el contenido del carrito y genera un desglose preliminar antes del checkout.
+ *     tags:
+ *       - Transacción
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               items: { type: 'array', items: { $ref: '#/components/schemas/CartItem' } }
+ *               email: { type: 'string' }
+ *               phone: { type: 'string' }
+ *     responses:
+ *       200:
+ *         description: Carrito procesado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 subtotal: { type: 'number' }
+ *                 total: { type: 'number' }
  */
 export async function GET(req: Request) {
   try {

@@ -1,26 +1,60 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import Stripe from 'stripe';
-import { createPayPalOrder } from '@/lib/services/payments/paypal';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import Stripe from "stripe";
+import { createPayPalOrder } from "@/lib/services/payments/paypal";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-08-16',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2023-08-16",
 });
 
 /**
- * POST /api/checkout
- * Orquestador principal del flujo checkout
- *
- * Body:
- * {
- *   cartItems: [{ productId, quantity, price, name }],
- *   shippingAddress: { street, city, state, zip, country },
- *   customerEmail: string,
- *   paymentMethod: 'stripe' | 'paypal',
- *   firstName: string,
- *   lastName: string,
- *   phone: string
- * }
+ * @swagger
+ * /api/checkout:
+ *   post:
+ *     summary: Orquestador de Pago (Stripe/PayPal)
+ *     description: |
+ *       Punto central para iniciar el pago. Valida stock, calcula impuestos/envío,
+ *       crea la orden en base de datos y genera el Payment Intent (Stripe) o Link (PayPal).
+ *     tags:
+ *       - Transacción
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [cartItems, shippingAddress, customerEmail, paymentMethod]
+ *             properties:
+ *               cartItems: { type: 'array', items: { $ref: '#/components/schemas/CartItem' } }
+ *               shippingAddress:
+ *                 type: object
+ *                 properties:
+ *                   street: { type: 'string' }
+ *                   city: { type: 'string' }
+ *                   state: { type: 'string' }
+ *                   zip: { type: 'string' }
+ *                   country: { type: 'string' }
+ *               customerEmail: { type: 'string' }
+ *               paymentMethod: { type: 'string', enum: ['stripe', 'paypal'] }
+ *               firstName: { type: 'string' }
+ *               lastName: { type: 'string' }
+ *               phone: { type: 'string' }
+ *               couponCode: { type: 'string' }
+ *     responses:
+ *       200:
+ *         description: Checkout exitoso. Retorna detalles para completar el pago en el cliente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 orderId: { type: 'string' }
+ *                 orderNumber: { type: 'string' }
+ *                 paymentDetails: { type: 'object' }
+ *                 orderSummary: { type: 'object' }
+ *       400:
+ *         description: Error de validación (stock, precios o campos faltantes).
  */
 export async function POST(req: Request) {
   try {
@@ -36,37 +70,46 @@ export async function POST(req: Request) {
     } = await req.json();
 
     // Validar datos requeridos
-    if (!cartItems?.length || !shippingAddress || !customerEmail || !paymentMethod) {
+    if (
+      !cartItems?.length ||
+      !shippingAddress ||
+      !customerEmail ||
+      !paymentMethod
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields: cartItems, shippingAddress, customerEmail, paymentMethod' },
-        { status: 400 }
+        {
+          error:
+            "Missing required fields: cartItems, shippingAddress, customerEmail, paymentMethod",
+        },
+        { status: 400 },
       );
     }
 
-    if (!['stripe', 'paypal'].includes(paymentMethod)) {
+    if (!["stripe", "paypal"].includes(paymentMethod)) {
       return NextResponse.json(
         { error: 'Invalid paymentMethod. Must be "stripe" or "paypal"' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    console.log(`🛒 Checkout initiated: ${cartItems.length} items, method: ${paymentMethod}`);
+    console.log(
+      `🛒 Checkout initiated: ${cartItems.length} items, method: ${paymentMethod}`,
+    );
 
     // 1️⃣ Validar carrito (stock, prices)
     const validationResult = await validateCart(cartItems);
     if (!validationResult.valid) {
       return NextResponse.json(
         { error: validationResult.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 2️⃣ Calcular subtotal (bruto)
     let subtotal = Number(
-      (cartItems.reduce(
-        (sum: number, item: any) => sum + item.price * item.quantity,
-        0
-      ).toFixed(2))
+      cartItems
+        .reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
+        .toFixed(2),
     );
 
     // 2.5️⃣ Aplicar Descuento de Promoción
@@ -76,7 +119,7 @@ export async function POST(req: Request) {
     if (couponCode) {
       const upperCode = couponCode.toUpperCase().trim();
       const promo = await prisma.promotion.findUnique({
-        where: { code: upperCode }
+        where: { code: upperCode },
       });
 
       if (promo && promo.active) {
@@ -102,19 +145,19 @@ export async function POST(req: Request) {
       data: {
         orderNumber: generateOrderNumber(),
         email: customerEmail,
-        phone: phone || '',
-        firstName: firstName || 'Customer',
-        lastName: lastName || '',
-        address: shippingAddress.street || '',
-        city: shippingAddress.city || '',
-        postalCode: shippingAddress.zip || '',
-        country: shippingAddress.country || 'Mexico',
+        phone: phone || "",
+        firstName: firstName || "Customer",
+        lastName: lastName || "",
+        address: shippingAddress.street || "",
+        city: shippingAddress.city || "",
+        postalCode: shippingAddress.zip || "",
+        country: shippingAddress.country || "Mexico",
         subtotal,
         shipping: shippingCost,
         tax,
         total,
-        status: 'pending',
-        paymentStatus: 'pending',
+        status: "pending",
+        paymentStatus: "pending",
         paymentMethod,
         items: {
           create: cartItems.map((item: any) => ({
@@ -134,12 +177,12 @@ export async function POST(req: Request) {
     // 7️⃣ Crear payment intent según método de pago
     let paymentDetails: any = {};
 
-    if (paymentMethod === 'stripe') {
+    if (paymentMethod === "stripe") {
       // Crear Stripe Payment Intent
       try {
         const paymentIntent = await stripe.paymentIntents.create({
           amount: Math.round(total * 100), // Stripe usa centavos
-          currency: 'mxn',
+          currency: "mxn",
           description: `Orden #${order.orderNumber}`,
           metadata: {
             orderId: order.id,
@@ -161,28 +204,33 @@ export async function POST(req: Request) {
 
         console.log(`💳 Stripe Payment Intent created: ${paymentIntent.id}`);
       } catch (stripeError) {
-        console.error('❌ Stripe error:', stripeError);
+        console.error("❌ Stripe error:", stripeError);
         // Marcar orden como fallida due to payment processing error
         await prisma.order.update({
           where: { id: order.id },
-          data: { status: 'failed', paymentStatus: 'failed' },
+          data: { status: "failed", paymentStatus: "failed" },
         });
         throw new Error(
-          stripeError instanceof Error ? stripeError.message : 'Stripe payment creation failed'
+          stripeError instanceof Error
+            ? stripeError.message
+            : "Stripe payment creation failed",
         );
       }
-    } else if (paymentMethod === 'paypal') {
+    } else if (paymentMethod === "paypal") {
       // Crear PayPal Order Reál En API Externa
       try {
         const paypalResponse = await createPayPalOrder(total, order.id);
         const paypalOrderId = paypalResponse.id;
-        
+
         await prisma.order.update({
           where: { id: order.id },
           data: { paymentId: paypalOrderId },
         });
 
-        const approveUrl = paypalResponse.links?.find((link: any) => link.rel === 'approve')?.href || `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
+        const approveUrl =
+          paypalResponse.links?.find((link: any) => link.rel === "approve")
+            ?.href ||
+          `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
 
         paymentDetails = {
           paypalOrderId,
@@ -191,8 +239,8 @@ export async function POST(req: Request) {
 
         console.log(`🅿️ PayPal Order link generated: ${paypalOrderId}`);
       } catch (err) {
-        console.error('❌ Falló la generación de cuota PayPal', err);
-        throw new Error('PayPal payment creation failed');
+        console.error("❌ Falló la generación de cuota PayPal", err);
+        throw new Error("PayPal payment creation failed");
       }
     }
 
@@ -212,18 +260,16 @@ export async function POST(req: Request) {
         total: total.toFixed(2),
         itemCount: cartItems.length,
       },
-      nextStep: 'payment',
+      nextStep: "payment",
     });
   } catch (error) {
-    console.error('❌ Checkout error:', error);
+    console.error("❌ Checkout error:", error);
     return NextResponse.json(
       {
         error:
-          error instanceof Error
-            ? error.message
-            : 'Checkout process failed',
+          error instanceof Error ? error.message : "Checkout process failed",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -232,14 +278,14 @@ export async function POST(req: Request) {
  * Validar carrito: verificar stock y precios
  */
 async function validateCart(
-  cartItems: any[]
+  cartItems: any[],
 ): Promise<{ valid: boolean; error?: string }> {
   try {
     for (const item of cartItems) {
       if (!item.productId || !item.quantity || item.quantity <= 0) {
         return {
           valid: false,
-          error: 'Invalid cart item: missing or invalid productId/quantity',
+          error: "Invalid cart item: missing or invalid productId/quantity",
         };
       }
 
@@ -263,7 +309,8 @@ async function validateCart(
 
       // Verificar que el precio no sea muy diferente (validación básica de fraude)
       // Allow 1% variance
-      const priceVariance = Math.abs(product.price - item.price) / product.price;
+      const priceVariance =
+        Math.abs(product.price - item.price) / product.price;
       if (priceVariance > 0.01) {
         return {
           valid: false,
@@ -276,7 +323,7 @@ async function validateCart(
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error.message : 'Validation error',
+      error: error instanceof Error ? error.message : "Validation error",
     };
   }
 }
@@ -284,18 +331,15 @@ async function validateCart(
 /**
  * Calcular costo de shipping basado en destino y monto
  */
-function calculateShipping(
-  address: any,
-  subtotal: number
-): number {
+function calculateShipping(address: any, subtotal: number): number {
   // Envío gratuito para compras >$1000 MXN
   if (subtotal > 1000) {
     return 0;
   }
 
   // Envío gratuito en CDMX/Ciudad de México
-  const city = (address.city || '').toUpperCase();
-  if (city.includes('CDMX') || city.includes('MEXICO CITY')) {
+  const city = (address.city || "").toUpperCase();
+  if (city.includes("CDMX") || city.includes("MEXICO CITY")) {
     return 0;
   }
 
@@ -307,7 +351,7 @@ function calculateShipping(
  * Generar número de orden único
  */
 function generateOrderNumber(): string {
-  const prefix = 'ORD';
+  const prefix = "ORD";
   const timestamp = Date.now().toString().slice(-5);
   const random = Math.random().toString(36).substring(2, 7).toUpperCase();
   return `${prefix}-${timestamp}${random}`;
@@ -319,47 +363,47 @@ function generateOrderNumber(): string {
  */
 export async function GET() {
   return NextResponse.json({
-    message: 'Checkout API Endpoint',
-    usage: 'POST with cart items, shipping address, and payment details',
+    message: "Checkout API Endpoint",
+    usage: "POST with cart items, shipping address, and payment details",
     example: {
       cartItems: [
         {
-          productId: 'clxxx...',
-          name: 'Laptop Pro',
+          productId: "clxxx...",
+          name: "Laptop Pro",
           quantity: 1,
           price: 999.99,
         },
       ],
       shippingAddress: {
-        street: '123 Avenida Principal',
-        city: 'Mexico City',
-        state: 'CDMX',
-        zip: '06500',
-        country: 'Mexico',
+        street: "123 Avenida Principal",
+        city: "Mexico City",
+        state: "CDMX",
+        zip: "06500",
+        country: "Mexico",
       },
-      customerEmail: 'customer@example.com',
-      paymentMethod: 'stripe',
-      firstName: 'Juan',
-      lastName: 'Pérez',
-      phone: '5512345678',
+      customerEmail: "customer@example.com",
+      paymentMethod: "stripe",
+      firstName: "Juan",
+      lastName: "Pérez",
+      phone: "5512345678",
     },
     response: {
       success: true,
-      orderId: 'clxxx...',
-      orderNumber: 'ORD-12345ABC',
-      paymentMethod: 'stripe',
+      orderId: "clxxx...",
+      orderNumber: "ORD-12345ABC",
+      paymentMethod: "stripe",
       paymentDetails: {
-        clientSecret: 'pi_....',
-        paymentIntentId: 'pi_...',
+        clientSecret: "pi_....",
+        paymentIntentId: "pi_...",
       },
       orderSummary: {
-        subtotal: '999.99',
-        shipping: '0.00',
-        tax: '159.98',
-        total: '1159.97',
+        subtotal: "999.99",
+        shipping: "0.00",
+        tax: "159.98",
+        total: "1159.97",
         itemCount: 1,
       },
-      nextStep: 'payment',
+      nextStep: "payment",
     },
   });
 }
