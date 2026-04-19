@@ -1,27 +1,40 @@
-import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import Stripe from 'stripe';
-import { prisma } from '@/lib/db';
-import { deductOrderStock, sendOrderConfirmationEmail } from '@/lib/services/email';
+import { NextResponse } from "next/server";
+import { headers } from "next/headers";
+import Stripe from "stripe";
+import { prisma } from "@/lib/db";
+import {
+  deductOrderStock,
+  sendOrderConfirmationEmail,
+} from "@/lib/services/email";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2023-08-16',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2023-08-16",
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 
 /**
- * POST /api/webhooks/stripe
- * Escucha eventos de Stripe (pagos completados, reembolsos, etc.)
+ * @swagger
+ * /api/webhooks/stripe:
+ *   post:
+ *     summary: Receptor de Eventos Stripe
+ *     description: Endpoint seguro para recibir webhooks de Stripe. Maneja la confirmación de pago (payment_intent.succeeded) y reembolsos (charge.refunded). Requiere verificación de firma.
+ *     tags:
+ *       - Administración
+ *     responses:
+ *       200:
+ *         description: Evento verificado y procesado exitosamente.
+ *       400:
+ *         description: Firma de Stripe inválida o falta de metadata.
  */
 export async function POST(req: Request) {
   const body = await req.text();
   const headersList = headers();
-  const signature = headersList.get('stripe-signature');
+  const signature = headersList.get("stripe-signature");
 
   if (!signature) {
-    console.error('❌ Missing Stripe signature');
-    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
+    console.error("❌ Missing Stripe signature");
+    return NextResponse.json({ error: "Missing signature" }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -30,21 +43,24 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     console.log(`📨 Received Stripe webhook: ${event.type}`);
   } catch (error) {
-    console.error('❌ Webhook signature verification failed:', error);
-    return NextResponse.json({ error: 'Signature verification failed' }, { status: 400 });
+    console.error("❌ Webhook signature verification failed:", error);
+    return NextResponse.json(
+      { error: "Signature verification failed" },
+      { status: 400 },
+    );
   }
 
   try {
     switch (event.type) {
-      case 'payment_intent.succeeded':
+      case "payment_intent.succeeded":
         await handlePaymentSucceeded(event.data.object as Stripe.PaymentIntent);
         break;
 
-      case 'payment_intent.payment_failed':
+      case "payment_intent.payment_failed":
         await handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
         break;
 
-      case 'charge.refunded':
+      case "charge.refunded":
         await handleRefund(event.data.object as Stripe.Charge);
         break;
 
@@ -54,10 +70,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('❌ Webhook processing error:', error);
+    console.error("❌ Webhook processing error:", error);
     return NextResponse.json(
-      { error: 'Webhook processing failed' },
-      { status: 500 }
+      { error: "Webhook processing failed" },
+      { status: 500 },
     );
   }
 }
@@ -71,7 +87,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     const orderNumber = paymentIntent.metadata.orderNumber;
 
     if (!orderId) {
-      console.error('❌ No orderId in payment intent metadata');
+      console.error("❌ No orderId in payment intent metadata");
       return;
     }
 
@@ -90,8 +106,8 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        paymentStatus: 'completed',
-        status: 'confirmed',
+        paymentStatus: "completed",
+        status: "confirmed",
       },
     });
 
@@ -110,7 +126,7 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
 
     console.log(`📧 Order confirmation email sent for ${orderNumber}`);
   } catch (error) {
-    console.error('❌ Error handling payment success:', error);
+    console.error("❌ Error handling payment success:", error);
     throw error;
   }
 }
@@ -124,7 +140,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
     const orderNumber = paymentIntent.metadata.orderNumber;
 
     if (!orderId) {
-      console.error('❌ No orderId in payment intent metadata');
+      console.error("❌ No orderId in payment intent metadata");
       return;
     }
 
@@ -132,14 +148,14 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        paymentStatus: 'failed',
-        status: 'cancelled',
+        paymentStatus: "failed",
+        status: "cancelled",
       },
     });
 
     console.log(`❌ Payment failed for order ${orderNumber}`);
   } catch (error) {
-    console.error('❌ Error handling payment failure:', error);
+    console.error("❌ Error handling payment failure:", error);
     throw error;
   }
 }
@@ -160,7 +176,7 @@ async function handleRefund(charge: Stripe.Charge) {
     });
 
     if (!order) {
-      console.error('❌ Order not found for refunded charge');
+      console.error("❌ Order not found for refunded charge");
       return;
     }
 
@@ -175,21 +191,23 @@ async function handleRefund(charge: Stripe.Charge) {
         },
       });
 
-      console.log(`♻️ Stock returned: Product ${item.productId} (+${item.quantity})`);
+      console.log(
+        `♻️ Stock returned: Product ${item.productId} (+${item.quantity})`,
+      );
     }
 
     // Marcar orden como refundada
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        paymentStatus: 'refunded',
-        status: 'cancelled',
+        paymentStatus: "refunded",
+        status: "cancelled",
       },
     });
 
     console.log(`💰 Order ${order.orderNumber} refunded and stock returned`);
   } catch (error) {
-    console.error('❌ Error handling refund:', error);
+    console.error("❌ Error handling refund:", error);
     throw error;
   }
 }
@@ -199,5 +217,5 @@ async function handleRefund(charge: Stripe.Charge) {
  * Health check
  */
 export async function GET() {
-  return NextResponse.json({ message: 'Stripe webhook endpoint' });
+  return NextResponse.json({ message: "Stripe webhook endpoint" });
 }

@@ -1,10 +1,21 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { deductOrderStock, sendOrderConfirmationEmail } from '@/lib/services/email';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import {
+  deductOrderStock,
+  sendOrderConfirmationEmail,
+} from "@/lib/services/email";
 
 /**
- * POST /api/webhooks/paypal
- * Escucha eventos de PayPal (pagos completados, cancelados, etc.)
+ * @swagger
+ * /api/webhooks/paypal:
+ *   post:
+ *     summary: Receptor de Eventos PayPal
+ *     description: Endpoint asíncrono para recibir notificaciones de PayPal (IPN/Webhooks). Procesa órdenes completadas, capturas de pago y reembolsos.
+ *     tags:
+ *       - Administración
+ *     responses:
+ *       200:
+ *         description: Evento recibido y procesado.
  */
 export async function POST(req: Request) {
   try {
@@ -12,19 +23,19 @@ export async function POST(req: Request) {
     console.log(`📨 Received PayPal webhook: ${body.event_type}`);
 
     switch (body.event_type) {
-      case 'CHECKOUT.ORDER.COMPLETED':
+      case "CHECKOUT.ORDER.COMPLETED":
         await handlePaymentCompleted(body);
         break;
 
-      case 'CHECKOUT.ORDER.APPROVED':
+      case "CHECKOUT.ORDER.APPROVED":
         console.log(`✅ PayPal order approved (pending capture)`);
         break;
 
-      case 'PAYMENT.CAPTURE.COMPLETED':
+      case "PAYMENT.CAPTURE.COMPLETED":
         await handlePaymentCaptured(body);
         break;
 
-      case 'PAYMENT.CAPTURE.REFUNDED':
+      case "PAYMENT.CAPTURE.REFUNDED":
         await handlePaymentRefunded(body);
         break;
 
@@ -35,7 +46,7 @@ export async function POST(req: Request) {
     // Responder con éxito siempre
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('❌ PayPal webhook processing error:', error);
+    console.error("❌ PayPal webhook processing error:", error);
     // Responder con éxito para que PayPal no reintente
     return NextResponse.json({ received: true }, { status: 200 });
   }
@@ -49,8 +60,8 @@ async function handlePaymentCompleted(body: any) {
     const paypalOrderId = body.resource?.id;
     const orderStatus = body.resource?.status;
 
-    if (!paypalOrderId || orderStatus !== 'COMPLETED') {
-      console.log('⏭️ PayPal order not completed');
+    if (!paypalOrderId || orderStatus !== "COMPLETED") {
+      console.log("⏭️ PayPal order not completed");
       return;
     }
 
@@ -69,8 +80,8 @@ async function handlePaymentCompleted(body: any) {
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        paymentStatus: 'completed',
-        status: 'confirmed',
+        paymentStatus: "completed",
+        status: "confirmed",
       },
     });
 
@@ -89,7 +100,7 @@ async function handlePaymentCompleted(body: any) {
 
     console.log(`📧 Order confirmation email sent for ${order.orderNumber}`);
   } catch (error) {
-    console.error('❌ Error handling PayPal completion:', error);
+    console.error("❌ Error handling PayPal completion:", error);
   }
 }
 
@@ -98,10 +109,11 @@ async function handlePaymentCompleted(body: any) {
  */
 async function handlePaymentCaptured(body: any) {
   try {
-    const supplementaryData = body.resource?.supplementary_data?.related_ids?.order_id;
+    const supplementaryData =
+      body.resource?.supplementary_data?.related_ids?.order_id;
 
     if (!supplementaryData) {
-      console.log('⏭️ No order ID in PayPal capture');
+      console.log("⏭️ No order ID in PayPal capture");
       return;
     }
 
@@ -119,13 +131,13 @@ async function handlePaymentCaptured(body: any) {
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        paymentStatus: 'completed',
-        status: 'confirmed',
+        paymentStatus: "completed",
+        status: "confirmed",
       },
     });
 
     // Deducir stock si no se ha hecho
-    if (order.paymentStatus === 'pending') {
+    if (order.paymentStatus === "pending") {
       await deductOrderStock(order.id);
 
       await sendOrderConfirmationEmail({
@@ -138,7 +150,7 @@ async function handlePaymentCaptured(body: any) {
 
     console.log(`✅ PayPal capture completed for order ${order.orderNumber}`);
   } catch (error) {
-    console.error('❌ Error handling PayPal capture:', error);
+    console.error("❌ Error handling PayPal capture:", error);
   }
 }
 
@@ -147,10 +159,11 @@ async function handlePaymentCaptured(body: any) {
  */
 async function handlePaymentRefunded(body: any) {
   try {
-    const supplementaryData = body.resource?.supplementary_data?.related_ids?.order_id;
+    const supplementaryData =
+      body.resource?.supplementary_data?.related_ids?.order_id;
 
     if (!supplementaryData) {
-      console.log('⏭️ No order ID in PayPal refund');
+      console.log("⏭️ No order ID in PayPal refund");
       return;
     }
 
@@ -175,21 +188,23 @@ async function handlePaymentRefunded(body: any) {
         },
       });
 
-      console.log(`♻️ Stock returned: Product ${item.productId} (+${item.quantity})`);
+      console.log(
+        `♻️ Stock returned: Product ${item.productId} (+${item.quantity})`,
+      );
     }
 
     // Marcar como refundada
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        paymentStatus: 'refunded',
-        status: 'cancelled',
+        paymentStatus: "refunded",
+        status: "cancelled",
       },
     });
 
     console.log(`💰 Order ${order.orderNumber} refunded and stock returned`);
   } catch (error) {
-    console.error('❌ Error handling PayPal refund:', error);
+    console.error("❌ Error handling PayPal refund:", error);
   }
 }
 
@@ -198,5 +213,5 @@ async function handlePaymentRefunded(body: any) {
  * Health check
  */
 export async function GET() {
-  return NextResponse.json({ message: 'PayPal webhook endpoint' });
+  return NextResponse.json({ message: "PayPal webhook endpoint" });
 }
