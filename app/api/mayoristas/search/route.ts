@@ -8,14 +8,62 @@ import { BRAND_CONFIG } from "@/lib/config/branding";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/mayoristas/search (HYBRID BOUTIQUE EDITION)
- *
- * El catálogo muestra productos de mayoristas EN TIEMPO REAL,
- * pero aplica filtros premium:
- * - ❌ Nunca muestra la foto genérica del mayorista → usa imagen local O placeholder
- * - ❌ Nunca muestra el stock numérico → la UI usa etiquetas ("En Stock", "Últimas unidades")
- * - ❌ Nunca menciona al mayorista al cliente → toda la identidad es dinámica
- * - ✅ Si el admin asignó una foto o nombre local → se usa con prioridad total
+ * @swagger
+ * /api/mayoristas/search:
+ *   get:
+ *     summary: Catálogo Boutique TECNO (Búsqueda Híbrida)
+ *     description: |
+ *       Busca productos de alta gama en tiempo real a través de múltiples mayoristas.
+ *       Aplica la identidad de marca TECNO, priorizando imágenes y descripciones locales configuradas por el administrador.
+ *     tags:
+ *       - Catálogo
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Término de búsqueda (ej. RTX 4090, MacBook Pro)
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filtrar por categoría tecnológica
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página para paginación
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *         description: Resultados por página
+ *     responses:
+ *       200:
+ *         description: Listado de productos encontrados con identidad dinámica aplicada.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 products:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
+ *                 total:
+ *                   type: integer
+ *                 success:
+ *                   type: boolean
+ *       429:
+ *         description: Límite de peticiones excedido (Rate limiting).
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Error interno al procesar la búsqueda híbrida.
  */
 export async function GET(request: NextRequest) {
   try {
