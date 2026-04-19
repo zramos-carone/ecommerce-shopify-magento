@@ -1,17 +1,41 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { createPayPalOrder } from '@/lib/services/payments/paypal';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { createPayPalOrder } from "@/lib/services/payments/paypal";
 
 /**
- * POST /api/payments/paypal-order
- * Create a PayPal order for checkout
- *
- * Body:
- * {
- *   orderId: string,
- *   amount: number (in MXN),
- *   email: string
- * }
+ * @swagger
+ * /api/payments/paypal-order:
+ *   post:
+ *     summary: Crear Orden (PayPal)
+ *     description: Genera una orden de pago en PayPal. Retorna el `approvalUrl` al que el cliente debe ser redirigido para autorizar el cobro.
+ *     tags:
+ *       - Transacción
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, amount, email]
+ *             properties:
+ *               orderId: { type: 'string' }
+ *               amount: { type: 'number' }
+ *               email: { type: 'string' }
+ *     responses:
+ *       200:
+ *         description: Orden de PayPal generada exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 paypalOrderId: { type: 'string' }
+ *                 approvalUrl: { type: 'string' }
+ *       400:
+ *         description: Datos inválidos o falta de stock.
+ *       500:
+ *         description: Fallo en la comunicación con PayPal.
  */
 export async function POST(req: Request) {
   try {
@@ -19,8 +43,8 @@ export async function POST(req: Request) {
 
     if (!orderId || !amount || !email) {
       return NextResponse.json(
-        { error: 'Missing required fields: orderId, amount, email' },
-        { status: 400 }
+        { error: "Missing required fields: orderId, amount, email" },
+        { status: 400 },
       );
     }
 
@@ -30,13 +54,13 @@ export async function POST(req: Request) {
     });
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    if (order.paymentStatus !== 'pending') {
+    if (order.paymentStatus !== "pending") {
       return NextResponse.json(
-        { error: 'Order payment already processed' },
-        { status: 400 }
+        { error: "Order payment already processed" },
+        { status: 400 },
       );
     }
 
@@ -49,28 +73,37 @@ export async function POST(req: Request) {
       where: { id: orderId },
       data: {
         paymentId: paypalOrderId,
-        paymentMethod: 'paypal',
+        paymentMethod: "paypal",
       },
     });
 
-    console.log(`📦 PayPal order requested via API standalone: ${paypalOrderId}`);
+    console.log(
+      `📦 PayPal order requested via API standalone: ${paypalOrderId}`,
+    );
 
-    const approveUrl = paypalResponse.links?.find((link: any) => link.rel === 'approve')?.href || `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
+    const approveUrl =
+      paypalResponse.links?.find((link: any) => link.rel === "approve")?.href ||
+      `https://sandbox.paypal.com/checkoutnow?token=${paypalOrderId}`;
 
     return NextResponse.json({
       success: true,
       paypalOrderId,
       orderNumber: order.orderNumber,
       amount: amount.toFixed(2),
-      currency: 'MXN',
+      currency: "MXN",
       approvalUrl: approveUrl,
       redirectUrl: `/payment?method=paypal&paypalOrderId=${paypalOrderId}`,
     });
   } catch (error) {
-    console.error('❌ PayPal order creation error:', error);
+    console.error("❌ PayPal order creation error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create PayPal order' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create PayPal order",
+      },
+      { status: 500 },
     );
   }
 }
@@ -81,12 +114,12 @@ export async function POST(req: Request) {
  */
 export async function GET() {
   return NextResponse.json({
-    message: 'PayPal Order Creation Endpoint',
-    usage: 'POST with orderId, amount, email',
+    message: "PayPal Order Creation Endpoint",
+    usage: "POST with orderId, amount, email",
     example: {
-      orderId: 'clxx...',
-      amount: 5800.00,
-      email: 'customer@example.com',
+      orderId: "clxx...",
+      amount: 5800.0,
+      email: "customer@example.com",
     },
   });
 }
