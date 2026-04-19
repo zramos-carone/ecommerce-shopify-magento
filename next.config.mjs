@@ -20,6 +20,13 @@ const nextConfig = {
       { protocol: 'https', hostname: 'm.media-amazon.com' },
       { protocol: 'https', hostname: '**.googleusercontent.com' },
       { protocol: 'https', hostname: '**.amazon.com' },
+      { protocol: 'https', hostname: '**.staticamazon.com' },
+      { protocol: 'https', hostname: '**.cloudinary.com' },
+      { protocol: 'https', hostname: '**.ingrammicro.com' },
+      { protocol: 'https', hostname: '**.synnex.com' },
+      { protocol: 'https', hostname: '**.azureedge.net' },
+      { protocol: 'http', hostname: '**' },
+      { protocol: 'https', hostname: '**' },
     ],
   },
   headers: async () => {

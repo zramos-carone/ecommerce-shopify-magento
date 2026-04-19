@@ -78,9 +78,11 @@ export async function GET(request: NextRequest) {
       (product) => {
         const local = overridesMap.get(product.sku);
 
-        // Imagen: NUNCA la del mayorista. Solo si el admin la aprobó.
-        // Si no hay imagen local → cadena vacía (el ProductCard gestiona el placeholder).
-        const approvedImage = local?.image || "";
+        // Imagen: Si el modo híbrido está activo, usar la del mayorista como fallback
+        // Si no, solo usar si el admin la aprobó localmente.
+        const approvedImage =
+          local?.image ||
+          (BRAND_CONFIG.allowMayoristaImages ? product.imageUrl : "");
 
         return {
           ...product,
@@ -88,7 +90,7 @@ export async function GET(request: NextRequest) {
           name: local?.name || product.name,
           brand: local?.brand || product.brand,
           price: local?.price || product.price,
-          // Imagen 100% controlada por el admin
+          // Imagen controlada por el modo de la tienda
           imageUrl: approvedImage,
           // Identidad unificada de la tienda
           mayorista: BRAND_CONFIG.identityName,

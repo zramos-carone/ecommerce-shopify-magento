@@ -23,6 +23,9 @@ export const BRAND_CONFIG = {
   metaDescription:
     "Hardware de alto rendimiento seleccionado por expertos para profesionales exigentes.",
 
+  // Configuración de Catálogo
+  allowMayoristaImages: true, // true = mayoristas fallback, false = solo fotos locales
+
   // Estética (Para uso futuro en variables CSS)
   colors: {
     primary: "#2563eb", // Azul Neón / Blue 600
