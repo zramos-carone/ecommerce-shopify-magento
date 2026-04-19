@@ -1,130 +1,133 @@
-import { createSwaggerSpec } from 'next-swagger-doc'
+import { createSwaggerSpec } from "next-swagger-doc";
 
 export const getSwaggerSpec = () => {
   return createSwaggerSpec({
-    apiFolder: 'app/api',
+    apiFolder: "app/api",
     definition: {
-      openapi: '3.0.0',
+      openapi: "3.0.0",
       info: {
-        title: 'Ecommerce MVP API',
-        version: '1.0.0',
+        title: "TECNO - Plataforma de Alta Tecnología API",
+        version: "1.0.0",
         description:
-          'API REST para plataforma ecommerce con integración de mayoristas (Ingram, Distribuido, Synnex)',
+          "API REST oficial de TECNO. Gestión de catálogo de alta gama, integración con mayoristas (Ingram, Distribuido, Synnex) y flujo transaccional seguro.",
         contact: {
-          name: 'Ecommerce MVP Team',
-          email: 'support@ecommerce-mvp.com',
+          name: "Soporte TECNO",
+          email: "tecnologia@tecno.com",
         },
         license: {
-          name: 'MIT',
-          url: 'https://opensource.org/licenses/MIT',
+          name: "Licencia Privada TECNO",
+          url: "https://tecno.com/license",
         },
       },
       servers: [
         {
-          url: 'http://localhost:3000',
-          description: 'Development Server',
-        },
-        {
-          url: 'https://ecommerce-mvp.vercel.app',
-          description: 'Production Server',
+          url: "http://localhost:3000",
+          description: "Servidor de Desarrollo TECNO",
         },
       ],
       tags: [
         {
-          name: 'Mayoristas',
-          description: 'Integración con proveedores mayoristas (Ingram, Distribuido, Synnex)',
+          name: "Catálogo",
+          description:
+            "Búsqueda y consulta de productos con identidad dinámica TECNO.",
+        },
+        {
+          name: "Transacción",
+          description: "Gestión de carrito de compras y proceso de checkout.",
+        },
+        {
+          name: "Órdenes",
+          description: "Seguimiento y creación de pedidos de alta tecnología.",
+        },
+        {
+          name: "Administración",
+          description:
+            "Endpoint exclusivos para el panel de control administrativo.",
         },
       ],
       components: {
         schemas: {
           Product: {
-            type: 'object',
+            type: "object",
             properties: {
-              id: { type: 'string', description: 'Producto ID único' },
-              sku: { type: 'string', description: 'SKU del producto' },
-              name: { type: 'string', description: 'Nombre del producto' },
-              description: { type: 'string', description: 'Descripción del producto' },
-              price: { type: 'number', format: 'float', description: 'Precio en USD' },
-              stock: { type: 'integer', description: 'Stock disponible' },
-              category: { type: 'string', description: 'Categoría (Laptop, GPU, CPU, etc)' },
-              brand: { type: 'string', description: 'Marca del producto' },
+              id: { type: "string", description: "ID interno de TECNO" },
+              sku: { type: "string", description: "SKU unificado" },
+              name: { type: "string", description: "Nombre comercial" },
+              description: { type: "string", description: "Ficha técnica" },
+              price: {
+                type: "number",
+                format: "float",
+                description: "Precio de venta",
+              },
+              stock: { type: "integer", description: "Disponibilidad" },
+              category: { type: "string", description: "Categoría" },
+              brand: { type: "string", description: "Marca" },
+              imageUrl: {
+                type: "string",
+                description: "URL de la imagen (Boutique Edition)",
+              },
               mayorista: {
-                type: 'string',
-                enum: ['ingram', 'distribuido', 'synnex'],
-                description: 'Proveedor mayorista',
+                type: "string",
+                description: "Identidad del proveedor (Uso interno)",
               },
-              mayoristSku: { type: 'string', description: 'SKU del mayorista' },
-              mayoristPrice: { type: 'number', format: 'float', description: 'Precio mayorista' },
             },
-            required: ['id', 'sku', 'name', 'price', 'stock', 'mayorista'],
           },
-          SearchQuery: {
-            type: 'object',
+          CartItem: {
+            type: "object",
             properties: {
-              q: { type: 'string', description: 'Término de búsqueda (obligatorio)' },
-              category: {
-                type: 'string',
-                description: 'Filtro por categoría (opcional)',
+              id: { type: "string" },
+              sku: { type: "string" },
+              name: { type: "string" },
+              price: { type: "number" },
+              quantity: { type: "integer" },
+              imageUrl: { type: "string" },
+            },
+          },
+          Order: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              orderNumber: { type: "string" },
+              status: {
+                type: "string",
+                enum: ["pending", "processing", "completed", "cancelled"],
               },
-              priceMin: { type: 'number', description: 'Precio mínimo en USD (opcional)' },
-              priceMax: { type: 'number', description: 'Precio máximo en USD (opcional)' },
-            },
-            required: ['q'],
-          },
-          SearchResult: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean', description: 'Indicador de éxito' },
-              query: { $ref: '#/components/schemas/SearchQuery' },
-              results: {
-                type: 'array',
+              paymentStatus: {
+                type: "string",
+                enum: ["pending", "paid", "failed"],
+              },
+              total: { type: "number" },
+              email: { type: "string" },
+              items: {
+                type: "array",
                 items: {
-                  type: 'object',
+                  type: "object",
                   properties: {
-                    products: {
-                      type: 'array',
-                      items: { $ref: '#/components/schemas/Product' },
-                    },
-                    total: { type: 'integer' },
-                    mayorista: { type: 'string' },
+                    productName: { type: "string" },
+                    quantity: { type: "integer" },
+                    price: { type: "number" },
                   },
                 },
               },
-              allProducts: {
-                type: 'array',
-                items: { $ref: '#/components/schemas/Product' },
-                description: 'Todos los productos ordenados por precio',
-              },
-              total: { type: 'integer', description: 'Total de productos encontrados' },
-              timestamp: { type: 'string', format: 'date-time' },
             },
           },
-          SyncResult: {
-            type: 'object',
+          PaymentIntent: {
+            type: "object",
             properties: {
-              success: { type: 'boolean' },
-              message: { type: 'string' },
-              results: {
-                type: 'object',
-                properties: {
-                  ingram: { type: 'integer' },
-                  distribuido: { type: 'integer' },
-                  synnex: { type: 'integer' },
-                  total: { type: 'integer' },
-                },
-              },
-              timestamp: { type: 'string', format: 'date-time' },
+              clientSecret: { type: "string" },
+              amount: { type: "number" },
+              currency: { type: "string" },
             },
           },
           ErrorResponse: {
-            type: 'object',
+            type: "object",
             properties: {
-              error: { type: 'string', description: 'Tipo de error' },
-              message: { type: 'string', description: 'Detalles del error' },
+              error: { type: "string", description: "Tipo de error" },
+              message: { type: "string", description: "Detalles del error" },
             },
           },
         },
       },
     },
-  })
-}
+  });
+};
