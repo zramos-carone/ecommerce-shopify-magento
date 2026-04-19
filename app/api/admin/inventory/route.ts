@@ -1,29 +1,56 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
 /**
- * GET /api/admin/inventory
- * Listar inventario con filtros y búsqueda
- *
- * Query params:
- * - search: buscar por nombre o SKU
- * - category: filtrar por categoría
- * - limit: número máximo de resultados (default 100, max 500)
+ * @swagger
+ * /api/admin/inventory:
+ *   get:
+ *     summary: Listar Inventario (Admin)
+ *     description: Recupera el listado de productos disponibles en TECNO con soporte para búsqueda por SKU/Nombre y filtrado por categoría.
+ *     tags:
+ *       - Administración
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Búsqueda por SKU o nombre de producto.
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filtrar por categoría tecnológica.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *     responses:
+ *       200:
+ *         description: Inventario recuperado exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 data: { type: 'array', items: { $ref: '#/components/schemas/Product' } }
+ *                 count: { type: 'integer' }
  */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get('search') || '';
-    const category = searchParams.get('category');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 500);
 
     // Build query
     const whereClause: any = {};
 
     if (search) {
       whereClause.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { sku: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: "insensitive" } },
+        { sku: { contains: search, mode: "insensitive" } },
       ];
     }
 
@@ -42,10 +69,12 @@ export async function GET(req: Request) {
         category: true,
       },
       take: limit,
-      orderBy: { name: 'asc' },
+      orderBy: { name: "asc" },
     });
 
-    console.log(`📦 Inventory query: ${products.length} products (search: "${search}", category: "${category}")`);
+    console.log(
+      `📦 Inventory query: ${products.length} products (search: "${search}", category: "${category}")`,
+    );
 
     return NextResponse.json({
       success: true,
@@ -55,20 +84,43 @@ export async function GET(req: Request) {
       category: category || undefined,
     });
   } catch (error) {
-    console.error('❌ Inventory fetch error:', error);
+    console.error("❌ Inventory fetch error:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch inventory' },
-      { status: 500 }
+      { error: "Failed to fetch inventory" },
+      { status: 500 },
     );
   }
 }
 
 /**
- * PATCH /api/admin/inventory
- * Actualizar stock en bulk
- *
- * Body: [{ productId, stockAdjustment }, ...]
- * stockAdjustment: número positivo o negativo para ajustar stock
+ * @swagger
+ * /api/admin/inventory:
+ *   patch:
+ *     summary: Ajuste Masivo de Stock (Admin)
+ *     description: Actualiza el inventario sumando o restando unidades a múltiples productos en una sola operación estratégica.
+ *     tags:
+ *       - Administración
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 productId: { type: 'string' }
+ *                 stockAdjustment: { type: 'integer', description: 'Cantidad a sumar (positivo) o restar (negativo)' }
+ *     responses:
+ *       200:
+ *         description: Ajustes procesados.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 results: { type: 'array', items: { type: 'object' } }
  */
 export async function PATCH(req: Request) {
   try {
@@ -76,18 +128,18 @@ export async function PATCH(req: Request) {
 
     if (!Array.isArray(updates) || updates.length === 0) {
       return NextResponse.json(
-        { error: 'Invalid request body. Expected array of updates.' },
-        { status: 400 }
+        { error: "Invalid request body. Expected array of updates." },
+        { status: 400 },
       );
     }
 
     const results = [];
 
     for (const { productId, stockAdjustment } of updates) {
-      if (!productId || typeof stockAdjustment !== 'number') {
+      if (!productId || typeof stockAdjustment !== "number") {
         results.push({
           productId,
-          error: 'Invalid productId or stockAdjustment',
+          error: "Invalid productId or stockAdjustment",
         });
         continue;
       }
@@ -97,7 +149,7 @@ export async function PATCH(req: Request) {
       });
 
       if (!product) {
-        results.push({ productId, error: 'Product not found' });
+        results.push({ productId, error: "Product not found" });
         continue;
       }
 
@@ -119,44 +171,72 @@ export async function PATCH(req: Request) {
     }
 
     const successCount = results.filter((r: any) => r.success).length;
-    console.log(`📦 Inventory bulk updated: ${successCount}/${results.length} products`);
+    console.log(
+      `📦 Inventory bulk updated: ${successCount}/${results.length} products`,
+    );
 
     return NextResponse.json({
       success: true,
       results,
     });
   } catch (error) {
-    console.error('❌ Inventory update error:', error);
+    console.error("❌ Inventory update error:", error);
     return NextResponse.json(
-      { error: 'Failed to update inventory' },
-      { status: 500 }
+      { error: "Failed to update inventory" },
+      { status: 500 },
     );
   }
 }
 
 /**
- * POST /api/admin/inventory
- * Crear o Importar un nuevo producto
+ * @swagger
+ * /api/admin/inventory:
+ *   post:
+ *     summary: Importar / Crear Producto (Admin)
+ *     description: Registra un nuevo producto tecnológico o actualiza uno existente basado en su SKU. Soporta metadatos de mayoristas.
+ *     tags:
+ *       - Administración
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Product'
+ *     responses:
+ *       200:
+ *         description: Producto importado/actualizado correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 data: { $ref: '#/components/schemas/Product' }
+ *       400:
+ *         description: SKU o Nombre faltante.
  */
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { 
-      sku, 
-      name, 
-      price, 
-      stock, 
-      category, 
-      image, 
-      brand, 
+    const {
+      sku,
+      name,
+      price,
+      stock,
+      category,
+      image,
+      brand,
       description,
       mayoristId,
       mayoristSku,
-      mayoristPrice
+      mayoristPrice,
     } = body;
 
     if (!sku || !name) {
-      return NextResponse.json({ error: 'SKU y Nombre son obligatorios' }, { status: 400 });
+      return NextResponse.json(
+        { error: "SKU y Nombre son obligatorios" },
+        { status: 400 },
+      );
     }
 
     // Upsert para evitar duplicados si ya existe el SKU
@@ -172,7 +252,7 @@ export async function POST(req: Request) {
         description,
         mayoristId,
         mayoristSku,
-        mayoristPrice: mayoristPrice ? Number(mayoristPrice) : undefined
+        mayoristPrice: mayoristPrice ? Number(mayoristPrice) : undefined,
       },
       create: {
         sku,
@@ -185,21 +265,23 @@ export async function POST(req: Request) {
         description,
         mayoristId,
         mayoristSku,
-        mayoristPrice: mayoristPrice ? Number(mayoristPrice) : undefined
-      }
+        mayoristPrice: mayoristPrice ? Number(mayoristPrice) : undefined,
+      },
     });
 
-    console.log(`✨ [PRODUCT_IMPORT] Producto ${sku} importado/actualizado correctamente.`);
+    console.log(
+      `✨ [PRODUCT_IMPORT] Producto ${sku} importado/actualizado correctamente.`,
+    );
 
     return NextResponse.json({
       success: true,
-      data: product
+      data: product,
     });
   } catch (error) {
-    console.error('❌ Inventory create error:', error);
+    console.error("❌ Inventory create error:", error);
     return NextResponse.json(
-      { error: 'Error al importar producto al inventario' },
-      { status: 500 }
+      { error: "Error al importar producto al inventario" },
+      { status: 500 },
     );
   }
 }

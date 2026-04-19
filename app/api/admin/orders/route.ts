@@ -1,20 +1,50 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
 /**
- * GET /api/admin/orders
- * List all orders with optional filtering
- *
- * Query params:
- * - status: filter by order status (pending, processing, shipped, delivered, failed)
- * - limit: number of orders to return (default 100, max 500)
- * - offset: pagination offset (default 0)
+ * @swagger
+ * /api/admin/orders:
+ *   get:
+ *     summary: Listado Global de Órdenes (Admin)
+ *     description: Recupera todas las órdenes del sistema con sus items. Permite filtrado por estado y paginación.
+ *     tags:
+ *       - Administración
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [all, pending, processing, shipped, delivered, failed]
+ *         description: Filtrar por estado del pedido.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 100
+ *         description: Cantidad de órdenes a recuperar.
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Salto para paginación.
+ *     responses:
+ *       200:
+ *         description: Lista de órdenes obtenida exitosamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: 'boolean' }
+ *                 data: { type: 'array', items: { $ref: '#/components/schemas/Order' } }
+ *                 pagination: { type: 'object' }
  */
 export async function GET(req: Request) {
   try {
     // Check admin authentication (basic token check for demo)
-    const authHeader = req.headers.get('authorization');
-    const adminToken = process.env.ADMIN_AUTH_TOKEN || 'demo-admin-token';
+    const authHeader = req.headers.get("authorization");
+    const adminToken = process.env.ADMIN_AUTH_TOKEN || "demo-admin-token";
 
     if (authHeader !== `Bearer ${adminToken}`) {
       // Allow unauthenticated access for now (demo)
@@ -23,13 +53,13 @@ export async function GET(req: Request) {
 
     // Parse query parameters
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const status = searchParams.get("status");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "100"), 500);
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     // Build query
     const whereClause: any = {};
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       whereClause.status = status;
     }
 
@@ -47,7 +77,7 @@ export async function GET(req: Request) {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
         skip: offset,
       }),
@@ -68,13 +98,13 @@ export async function GET(req: Request) {
           pages: Math.ceil(total / limit),
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('❌ Failed to fetch orders:', error);
+    console.error("❌ Failed to fetch orders:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
-      { status: 500 }
+      { error: "Failed to fetch orders" },
+      { status: 500 },
     );
   }
 }
