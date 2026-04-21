@@ -6,6 +6,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 import { BRAND_CONFIG } from "@/lib/config/branding";
+import { env } from "@/lib/config/env";
+// Forzando el uso de env para que TECNO Guard se active en tiempo de build/runtime
+void env;
 
 export const metadata: Metadata = {
   title: BRAND_CONFIG.metaTitle,
