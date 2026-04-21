@@ -79,6 +79,7 @@ export const validateEnv = () => {
       /* eslint-enable no-console */
       process.exit(1);
     }
+    throw error; // Asegura que TypeScript sepa que esta ruta no devuelve undefined
   }
 };
 
