@@ -4,10 +4,11 @@
   "private": true,
   "description": "MaxTech - Plataforma ecommerce MVP para venta de productos tecnológicos en México",
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
+    "dev": "pnpm run env:check && next dev",
+    "build": "pnpm run env:check && prisma generate && prisma db push --accept-data-loss && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
+    "env:check": "node --env-file=.env --import tsx scripts/check-env.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx}\"",
     "type-check": "tsc --noEmit",
     "validate": "pnpm lint && pnpm type-check && pnpm test",
@@ -18,13 +19,16 @@
     "test:e2e:ui": "playwright test --ui",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "tsx prisma/seed-admin.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "clean": "rm -rf .next node_modules .turbo",
     "swagger:generate": "node scripts/swagger.js",
     "postinstall": "prisma generate",
     "prepare": "husky install"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed-admin.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.5.0",
