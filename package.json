@@ -5,7 +5,7 @@
   "description": "MaxTech - Plataforma ecommerce MVP para venta de productos tecnológicos en México",
   "scripts": {
     "dev": "pnpm run env:check && next dev",
-    "build": "pnpm run env:check && prisma generate && prisma db push --accept-data-loss && prisma db seed && next build",
+    "build": "pnpm run env:check && prisma generate && prisma migrate deploy && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "env:check": "node --env-file=.env --import tsx scripts/check-env.ts",
