@@ -16,6 +16,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const [isAdded, setIsAdded] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,13 +56,14 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
       <Link href={`/catalog/${product.id}`} className="block">
         {/* Image Container */}
         <div className="relative aspect-square bg-gray-50 m-2 rounded-[2rem] overflow-hidden flex items-center justify-center">
-          {product.imageUrl ? (
+          {product.imageUrl && !imgError ? (
             <Image
               src={product.imageUrl}
               alt={product.name}
               fill
               className="object-contain p-6 group-hover:scale-105 transition-transform duration-700"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              onError={() => setImgError(true)}
             />
           ) : (
             /* Placeholder elegante cuando no hay imagen aprobada */
