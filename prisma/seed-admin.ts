@@ -32,9 +32,6 @@ async function main() {
   console.log(`📧 Email: ${admin.email}`);
   console.log(`🔑 Password: ${adminPassword}`);
   console.log("---");
-  console.log(
-    '⚠️ IMPORTANTE: Añade NEXTAUTH_SECRET="tu_secreto_aqui" a tu archivo .env',
-  );
 }
 
 main()

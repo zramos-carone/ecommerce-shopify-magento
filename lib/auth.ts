@@ -47,8 +47,14 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         try {
-          return await validateUserCredentials(credentials);
-        } catch {
+          const user = await validateUserCredentials(credentials);
+          return user;
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error(
+            "🔐 [AUTH_ERROR]:",
+            error instanceof Error ? error.message : "Error desconocido",
+          );
           return null;
         }
       },
